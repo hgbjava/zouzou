@@ -15,7 +15,7 @@ AV.Cloud.define('queryUserDynamicData', function(request, response) {
 		response.error({"code":500, "result":"userDynamicDataId不为空"});
 	}else{
 		var userDynamicQuery  = new AV.Query(UserDynamicData);
-		query.get(userDynamicDataId).then(function(userDynamicData) {
+		userDynamicQuery.get(userDynamicDataId).then(function(userDynamicData) {
 			if(userDynamicData){
 				response.success({'code':200,'result': userDynamicData});
 			}
