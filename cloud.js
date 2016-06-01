@@ -10,17 +10,22 @@ var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
  * 查询用户动态数据
  */
 AV.Cloud.define('queryUserDynamicData', function(request, response) {
-	var userDynamicQuery  = new AV.Query(UserDynamicData);
-	userDynamicQuery.get(userDynamicDataId,{
-		success: function(userDynamicData){
-			if(userDynamicData){
-				response.success({'code':200,'results': speedDate});
+	var userDynamicDataId = request.params.userDynamicDataId;
+	if(!userDynamicDataId || userDynamicDataId === ''){
+		response.error({"code":500, "result":"userDynamicDataId不为空"});
+	}else{
+		var userDynamicQuery  = new AV.Query(UserDynamicData);
+		userDynamicQuery.get(userDynamicDataId,{
+			success: function(userDynamicData){
+				if(userDynamicData){
+					response.success({'code':200,'results': speedDate});
+				}
+			},
+			error: function(error){
+				response.error({"code":500, "result":"服务端异常，请稍后再试"});
 			}
-		},
-		error: function(error){
-			response.error({"code":500, "result":"服务端异常，请稍后再试"});
-		}
-	});
+		});
+	}
 });
 
 /**
