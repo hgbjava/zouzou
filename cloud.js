@@ -10,23 +10,15 @@ var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
  * 查询用户动态数据
  */
 AV.Cloud.define('queryUserDynamicData', function(request, response) {
-	var query = new AV.Query(UserDynamicData);
-	var time = new Date().getTime() - 20 * 2 * 1000;
-	var date = new Date();    
-	date.setTime(time);
-	query.lessThan('updatedAt',date);
-
-	query.find({
-		success: function(results) {
-		    for (var i = 0; i < results.length; i++) {
-		        var object = results[i];
-		        object.set('onlineStatus', true);
-		        object.save();
-		    }
-			response.success(results.length + " 个用户在线状态更新");
+	var userDynamicQuery  = new AV.Query(UserDynamicData);
+	userDynamicQuery.get(userDynamicDataId,{
+		success: function(userDynamicData){
+			if(userDynamicData){
+				response.success({'code':200,'results': speedDate});
+			}
 		},
-		error: function(error) {
-		    response.error("Error " + error.code + " : " + error.message + " when query guys getRelationCountByStatus.");
+		error: function(error){
+			response.error({"code":500, "result":"服务端异常，请稍后再试"});
 		}
 	});
 });
