@@ -15,15 +15,12 @@ AV.Cloud.define('queryUserDynamicData', function(request, response) {
 		response.error({"code":500, "result":"userDynamicDataId不为空"});
 	}else{
 		var userDynamicQuery  = new AV.Query(UserDynamicData);
-		userDynamicQuery.get(userDynamicDataId,{
-			success: function(userDynamicData){
-				if(userDynamicData){
-					response.success({'code':200,'results': speedDate});
-				}
-			},
-			error: function(error){
-				response.error({"code":500, "result":"服务端异常，请稍后再试"});
+		query.get(userDynamicDataId).then(function(userDynamicData) {
+			if(userDynamicData){
+				response.success({'code':200,'result': userDynamicData});
 			}
+		}, function(error) {
+		  	response.error({"code":500, "result":"false", "msg":error.message});
 		});
 	}
 });
