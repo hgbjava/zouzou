@@ -60,45 +60,41 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 		response.error({"code":500, "result":"userDynamicDataId不为空"});
 	}else{
 		var userDynamicQuery  = new AV.Query(UserDynamicData);
-		userDynamicQuery.get(userDynamicDataId,{
-			success: function(userDynamicData){
-				if(userDynamicData){
-					var location = userDynamicData.get('location');
-					var userListQuery = new AV.Query(UserDynamicData);
-					userListQuery.near('location', location);
-					userListQuery.notContainedIn('datingStatus',[2,3,4]);
-					userListQuery.notContainedIn('objectId',[userDynamicData.id]);
-					userListQuery.equalTo('onlineStatus',true);
-					userListQuery.limit(10);
-					userListQuery.include("userId");
-					userListQuery.find({
-						success : function(resultList){
-						    var userArray = [];
-						    var x=0;
-						    for(var i=0;i<resultList.length;i++){
-						        var distance = location.kilometersTo(resultList[i].get("location"));
-						        if(resultList[i].get("userId")){
-		    				        resultList[i]=resultList[i].get("userId");
-		    				        resultList[i].add("distance",distance);
-		    				        userArray[x]=resultList[i];
-		    				        x=x+1;
-						        }
-						    }
-						    var finalResult = {'code':200,'results':userArray};
-							response.success(finalResult);
-						},
-						error : function(){
-							response.error({"code":500, "result":"服务端异常，请稍后再试"});
-						}
-					});
-				}else{
-					response.error({"code":500, "result":"找不到对应的userdynamicdata，userId=" + userDynamicDataId});
-				}
-			},
-			error: function(){
-				response.error({"code":500, "result":"查询用户信息失败，userId=" + userId});
+		userDynamicQuery.get(userDynamicDataId).then(function(userDynamicData){
+			if(userDynamicData){
+				var location = userDynamicData.get('location');
+				var userListQuery = new AV.Query(UserDynamicData);
+				userListQuery.near('location', location);
+				userListQuery.notContainedIn('datingStatus',[2,3,4]);
+				userListQuery.notContainedIn('objectId',[userDynamicData.id]);
+				userListQuery.equalTo('onlineStatus',true);
+				userListQuery.limit(10);
+				userListQuery.include("userId");
+				userListQuery.find().then(function(results){
+					var userArray = [];
+				    var x=0;
+				    for(var i=0;i<results.length;i++){
+				        var distance = location.kilometersTo(results[i].get("location"));
+				        if(results[i].get("userId")){
+    				        results[i]=results[i].get("userId");
+    				        results[i].add("distance",distance);
+    				        userArray[x]=results[i];
+    				        x=x+1;
+				        }
+				    }
+				    var finalResult = {'code':200,'results':userArray};
+					response.success(finalResult);
+				},
+				function(error){
+					response.error({"code":500, "result":"服务端异常，请稍后再试"});
+				});
+			}else{
+				response.error({"code":500, "result":"找不到对应的userdynamicdata，userId=" + userDynamicDataId});
 			}
-		})
+		},
+		function(error){
+			response.error({"code":500, "result":"查询用户信息失败，userId=" + userId});
+		});
 	}
 });
 
