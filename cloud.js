@@ -133,7 +133,7 @@ AV.Cloud.define('likeSomeone', function(request, response) {
 	    				speedDatingQuery.find().then(function(results){
 							if(results.length > 0){
     				    		//存在记录，则修改状态
-    				    		results[0].fetchWhenSave(true);
+    				    		//results[0].fetchWhenSave(true);
     				    		results[0].set('status', 2);
     				    		results[0].save();
 
@@ -207,7 +207,7 @@ AV.Cloud.define('goTogther', function(request, response) {
 		var speedDateQuery = new AV.Query(SpeedDate);
 		speedDateQuery.get(speedDateId).then(function(speedDate){
 			if(speedDate){
-				speedDate.fetchWhenSave(true);
+				//speedDate.fetchWhenSave(true);
 				speedDate.set('status', 3);
 				speedDate.save();
 				//同步更新用户状态
