@@ -110,21 +110,18 @@ AV.Cloud.define('likeSomeone', function(request, response) {
 	if(!fromUserId || fromUserId === '' || !toUserId || toUserId === ''){
 		response.error("参数不正确，fromUserId=" + fromUserId + ", toUserId=" + fromUserId);
 	}else{
-		var fromUserDynamic = null;
-		var toUserDynamic = null;
-		var fromUserDynamic = new UserDynamicData();
-		fromUserDynamic.id = fromUserId;
+		var user = new User();
+		user.id = fromUserId;
 		var userDynamicQuery  = new AV.Query(UserDynamicData);
-		userDynamicQuery.equalTo('userId',fromUserDynamic);
+		userDynamicQuery.equalTo('userId',user);
 		userDynamicQuery.find().then(function(results){
 			if(results.length > 0){
-				fromUserDynamic = results[0];
-				toUserDynamic = new UserDynamicData();
-				toUserDynamic.id = toUserId;
-			    userDynamicQuery.equalTo('userId',toUserDynamic);
+				var fromUserDynamic = results[0];
+				user.id = toUserId;
+			    userDynamicQuery.equalTo('userId',user);
 			    userDynamicQuery.find().then(function(results){
 					if(results.length > 0){
-						toUserDynamic = results[0];
+						var toUserDynamic = results[0];
 						var speedDatingQuery = new AV.Query(SpeedDate);
 	    				speedDatingQuery.equalTo('fromUser',toUserId);
 	    				speedDatingQuery.equalTo('toUser',fromUserId);
@@ -207,54 +204,36 @@ AV.Cloud.define('goTogther', function(request, response) {
 		var speedDateQuery = new AV.Query(SpeedDate);
 		speedDateQuery.get(speedDateId).then(function(speedDate){
 			if(speedDate){
-				//speedDate.fetchWhenSave(true);
 				speedDate.set('status', 3);
 				speedDate.save();
-				//同步更新用户状态
-				var userQuery = new AV.Query(User);
-				userQuery.get(speedDate.get('fromUser')).then(function(fromUser){
-					if(fromUser){
-				        //修改from用户状态
-        				var userDynamicQuery  = new AV.Query(UserDynamicData);
-        				userDynamicQuery.equalTo('userId', fromUser);
-        				userDynamicQuery.find().then(function(results){
-        					if(results.length >0){
+				//修改from用户状态
+				var user = new User();
+				user.id=speedDate.get('fromUser');
+				var userDynamicQuery  = new AV.Query(UserDynamicData);
+				userDynamicQuery.equalTo('userId', user);
+				userDynamicQuery.find().then(function(results){
+					if(results.length >0){
+						results[0].set('datingStatus', 3);
+						results[0].save();
+						//修改to用户状态
+						user.id=speedDate.get('toUser');
+						userDynamicQuery.equalTo('userId', toUser);
+				        userDynamicQuery.find().then(function(results){
+				        	if(results.length >0){
     							results[0].set('datingStatus', 3);
     							results[0].save();
-    							//修改to用户状态
-    							userQuery.get(speedDate.get('toUser')).then(function(toUser){
-    								if(toUser){
-    							        userDynamicQuery.equalTo('userId', toUser);
-    							        userDynamicQuery.find().then(function(results){
-    							        	if(results.length >0){
-        	        							results[0].set('datingStatus', 3);
-        	        							results[0].save();
-        	        							//返回当前快约记录
-        	        							response.success({'code':200,'results': speedDate});
-        	        						}else{
-        	        							response.error("用户dynamicData不存在，toUser=" + speedDate.get('toUser'));
-        	        						}
-    							        },
-    							        function(error){
-    							        	response.error("服务端异常(setep=5), toUser=" + speedDate.get('toUser') + " ,message=" + error.message);
-    							        });
-							    	}else{
-							    		response.error("用户不存在，toUser=" + speedDate.get('toUser'));
-							    	}
-    							},
-    							function(error){
-    								response.error("服务端异常(setep=4), toUser=" + speedDate.get('toUser') + " ,message=" + error.message);
-    							});
+    							//返回当前快约记录
+    							response.success({'code':200,'results': speedDate});
     						}else{
-    							response.error("用户dynamicData不存在, fromUser=" + speedDate.get('fromUser'));
+    							response.error("用户dynamicData不存在，toUser=" + speedDate.get('toUser'));
     						}
-        				},
-        				function(error){
-        					response.error("服务端异常(setep=3), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message);
-        				});
-			    	}else{
-			    		response.error("用户不存在, fromUser=" + speedDate.get('fromUser'));
-			    	}
+				        },
+				        function(error){
+				        	response.error("服务端异常(setep=3), toUser=" + speedDate.get('toUser') + " ,message=" + error.message);
+				        });
+					}else{
+						response.error("用户dynamicData不存在, fromUser=" + speedDate.get('fromUser'));
+					}
 				},
 				function(error){
 					response.error("服务端异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message);
