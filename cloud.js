@@ -197,89 +197,74 @@ AV.Cloud.define('likeSomeone', function(request, response) {
 
 /**
  * 走起接口
+ * param example: {"speedDateId":"569a01c400b00ef385062359"}
  */
 AV.Cloud.define('goTogther', function(request, response) {
 	var speedDateId = request.params.speedDateId;
 	if(!speedDateId || speedDateId === ''){
-		response.error('param speedDateId is blank');
+		response.error('参数speedDateId不能为空');
 	}else{
-		var speedDate = null;
 		var speedDateQuery = new AV.Query(SpeedDate);
-		speedDateQuery.get(speedDateId, {
-			success : function(result){
-				if(result){
-					speedDate = result;
-					speedDate.fetchWhenSave(true);
-					speedDate.set('status', 3);
-					speedDate.save();
-					//同步更新用户状态
-					var fromUser = null;
-					var toUser = null;
-					var userQuery = new AV.Query(User);
-					userQuery.get(speedDate.get('fromUser'),{
-					    success : function(result){
-					    	if(result){
-								fromUser = result;
-						        //修改from用户状态
-		        				var userDynamicQuery  = new AV.Query(UserDynamicData);
-		        				userDynamicQuery.equalTo('userId', fromUser);
-		        				userDynamicQuery.find({
-		        					success : function(result){
-		        						if(result.length >0){
-		        							result[0].set('datingStatus', 3);
-		        							result[0].save();
-		        							//修改to用户状态
-		        							userQuery.get(speedDate.get('toUser'),{
-		        							    success : function(result){
-		        							    	if(result){
-		        							    		toUser = result;
-			        							        userDynamicQuery.equalTo('userId', toUser);
-			                	        				userDynamicQuery.find({
-			                	        					success : function(result){
-			                	        						if(result.length >0){
-			                	        							result[0].set('datingStatus', 3);
-			                	        							result[0].save();
-			                	        							//返回当前快约记录
-			                	        							response.success({'code':200,'results': speedDate});
-			                	        						}else{
-			                	        							response.error("用户对应的dynamicData不存在，toUser=" + speedDate.get('toUser'));
-			                	        						}
-			                	        					},
-			                	        					error : function(){
-			                	        						response.error("服务端异常，请稍后再试");
-			                	        					}
-			                	        				});
-		        							    	}else{
-		        							    		response.error("用户不存在，toUser=" + speedDate.get('toUser'));
-		        							    	}
-		        							    },
-		        							    error : function(){
-		        							        response.error("服务端异常，请稍后再试");
-		        							    }
-		        							});
-		        						}else{
-		        							response.error("用户对应的dynamicData不存在，fromUser=" + speedDate.get('fromUser'));
-		        						}
-		        					},
-		        					error : function(){
-		        						response.error("服务端异常，请稍后再试");
-		        					}
-		        				});
-					    	}else{
-					    		response.error("用户不存在，fromUser=" + speedDate.get('fromUser'));
-					    	}
-					    },
-					    error : function(){
-					        response.error("服务端异常，请稍后再试");
-					    }
-					});
-				}else{
-					response.error("找不到对应的邀约记录,speedDateId=" + speedDateId);
-				}
-			},
-			error : function(){
-				response.error("服务端异常，请稍后再试");
+		speedDateQuery.get(speedDateId).then(function(speedDate){
+			if(speedDate){
+				speedDate.fetchWhenSave(true);
+				speedDate.set('status', 3);
+				speedDate.save();
+				//同步更新用户状态
+				var userQuery = new AV.Query(User);
+				userQuery.get(speedDate.get('fromUser')).then(function(fromUser){
+					if(fromUser){
+				        //修改from用户状态
+        				var userDynamicQuery  = new AV.Query(UserDynamicData);
+        				userDynamicQuery.equalTo('userId', fromUser);
+        				userDynamicQuery.find().then(function(results){
+        					if(results.length >0){
+    							results[0].set('datingStatus', 3);
+    							results[0].save();
+    							//修改to用户状态
+    							userQuery.get(speedDate.get('toUser')).then(function(toUser){
+    								if(toUser){
+    							        userDynamicQuery.equalTo('userId', toUser);
+    							        userDynamicQuery.find().then(function(results){
+    							        	if(results.length >0){
+        	        							results[0].set('datingStatus', 3);
+        	        							results[0].save();
+        	        							//返回当前快约记录
+        	        							response.success({'code':200,'results': speedDate});
+        	        						}else{
+        	        							response.error("用户dynamicData不存在，toUser=" + speedDate.get('toUser'));
+        	        						}
+    							        },
+    							        function(error){
+    							        	response.error("服务端异常(setep=5), toUser=" + speedDate.get('toUser') + " ,message=" + error.message);
+    							        });
+							    	}else{
+							    		response.error("用户不存在，toUser=" + speedDate.get('toUser'));
+							    	}
+    							},
+    							function(error){
+    								response.error("服务端异常(setep=4), toUser=" + speedDate.get('toUser') + " ,message=" + error.message);
+    							});
+    						}else{
+    							response.error("用户dynamicData不存在, fromUser=" + speedDate.get('fromUser'));
+    						}
+        				},
+        				function(error){
+        					response.error("服务端异常(setep=3), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message);
+        				});
+			    	}else{
+			    		response.error("用户不存在, fromUser=" + speedDate.get('fromUser'));
+			    	}
+				},
+				function(error){
+					response.error("服务端异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message);
+				});
+			}else{
+				response.error("邀约记录不存在, speedDateId=" + speedDateId);
 			}
+		},
+		function(error){
+			response.error("服务端异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message);
 		});
 	}
 });
