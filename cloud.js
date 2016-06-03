@@ -217,7 +217,7 @@ AV.Cloud.define('goTogther', function(request, response) {
 						results[0].save();
 						//修改to用户状态
 						user.id=speedDate.get('toUser');
-						userDynamicQuery.equalTo('userId', toUser);
+						userDynamicQuery.equalTo('userId', user);
 				        userDynamicQuery.find().then(function(results){
 				        	if(results.length >0){
     							results[0].set('datingStatus', 3);
