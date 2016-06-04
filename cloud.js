@@ -307,6 +307,7 @@ AV.Cloud.define('endSpeedDate', function(request, response) {
 
 /**
  * 相互评价
+ * param sample: {"userId":"567e95ec60b2e1871e04a8ae","honesty":4,"talkative":4,"temperament":4,"seductive":4,"speedDateId":"569a01c400b00ef385062359"}
  */
 AV.Cloud.define('evaluationEach', function(request, response) {
 	var userId = request.params.userId;
@@ -458,7 +459,7 @@ AV.Cloud.define('evaluationEach', function(request, response) {
 			});
 		},
 		function(error){
-			response.error({"code":"500", "result":"服务端异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
+			response.error({"code":"500", "result":"查询SpeedDate异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
 		});
 	}
 });
@@ -474,18 +475,16 @@ AV.Cloud.define('checkAndUpdateSpeedDataValid', function(request, response) {
 	query.equalTo('status', 1);
 	query.lessThan('createdAt',date);
 	query.equalTo('isValid', true);
-	query.find({
-		success: function(results) {
-		    for (var i = 0; i < results.length; i++) {
-		        var object = results[i];
-		        object.set('isValid', false);
-		        object.save();
-		    }
-			response.success(results.length + "个SpeedDate记录无效");
-		},
-		error: function(error) {
-		    response.error({"code":500, "result":"服务端异常，请稍后再试"});
-		}
+	query.find().then(function(results){
+		for (var i = 0; i < results.length; i++) {
+	        var object = results[i];
+	        object.set('isValid', false);
+	        object.save();
+	    }
+		response.success(results.length + "个SpeedDate记录无效");
+	},
+	function(error){
+		response.error({"code":"500", "result":"查询SpeedDate异常(setep=1) ,message=" + error.message});
 	});
 });
 
@@ -494,32 +493,25 @@ AV.Cloud.define('datingRoute', function(request, response) {
 	var latitude = request.params.latitude;
 	var longitude = request.params.longitude;
 	var point = new AV.GeoPoint({"latitude": latitude, "longitude": longitude});
-	var speedDate = null;
 	var speedDateQuery = new AV.Query(SpeedDate);
-	speedDateQuery.get(speedDateId, {
-		success : function(result){
-			if(result){
-				speedDate = result;
-				//新增评价和修改用户状态
-				var speedDateRoute = new SpeedDateRoute();
-				speedDateRoute.save({
-	    			'speedDate' : speedDate,
-					'coordinate' : point
-	    		},{
-	    			success : function(speedDateRoute){
-	    				response.success({'code':200,'results':"success"});
-	    			},
-	    			error : function(){
-	    			    response.error({"code":500, "result":"服务端异常，请稍后再试，step=2"});
-	    			}
-	    		});
-			}else{
-				response.error({"code":500, "result":"快约记录不存在,id=" + speedDateId});
-			}
-		},
-		error : function(){
-		    response.error({"code":500, "result":"服务端异常，请稍后再试，step=1"});
+	speedDateQuery.get(speedDateId).then(function(speedDate){
+		if(speedDate){
+			//新增用户走走坐标
+			var speedDateRoute = new SpeedDateRoute();
+			speedDateRoute.set('speedDate',speedDate);
+			speedDateRoute.set('coordinate',point);
+			speedDateRoute.save().then(function(speedDateRoute){
+				response.success({'code':200,'results':"success"});
+			},
+			function(error){
+				response.error({"code":"500", "result":"保存数据异常, message=" + error.message});
+			});
+		}else{
+			response.error({"code":"500", "result":"SpeedDate不存在(setep=1), speedDateId=" + speedDateId});
 		}
+	},
+	function(error){
+		response.error({"code":"500", "result":"查询SpeedDate异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
 	});
 });
 
