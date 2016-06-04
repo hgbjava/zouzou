@@ -250,6 +250,7 @@ AV.Cloud.define('goTogther', function(request, response) {
 
 /**
  * 结束走走接口
+ * param example: {"speedDateId":"569a01c400b00ef385062359"}
  */
 AV.Cloud.define('endSpeedDate', function(request, response) {
 	var speedDateId = request.params.speedDateId;
@@ -258,81 +259,48 @@ AV.Cloud.define('endSpeedDate', function(request, response) {
 	}else{
 		var speedDate = null;
 		var speedDateQuery = new AV.Query(SpeedDate);
-		speedDateQuery.get(speedDateId, {
-			success : function(result){
-				if(result){
-					speedDate = result;
-					speedDate.fetchWhenSave(true);
-					speedDate.set('status', 4);
-					speedDate.save();
-					//同步更新用户状态
-					var fromUser = null;
-					var toUser = null;
-					var userQuery = new AV.Query(User);
-					userQuery.get(speedDate.get('fromUser'),{
-					    success : function(result){
-					    	if(result){
-								fromUser = result;
-						        //修改from用户状态
-		        				var userDynamicQuery  = new AV.Query(UserDynamicData);
-		        				userDynamicQuery.equalTo('userId', fromUser);
-		        				userDynamicQuery.find({
-		        					success : function(result){
-		        						if(result.length >0){
-		        							result[0].set('datingStatus', 4);
-		        							result[0].save();
-		        							//修改to用户状态
-		        							userQuery.get(speedDate.get('toUser'),{
-		        							    success : function(result){
-		        							    	if(result){
-		        							    		toUser = result;
-			        							        userDynamicQuery.equalTo('userId', toUser);
-			                	        				userDynamicQuery.find({
-			                	        					success : function(result){
-			                	        						if(result.length >0){
-			                	        							result[0].set('datingStatus', 4);
-			                	        							result[0].save();
-			                	        							//返回当前快约记录
-			                	        							response.success({'code':200,'results': speedDate});
-			                	        						}else{
-			                	        							response.error({"code":500, "result":"用户对应的dynamicData不存在，toUser=" + speedDate.get('toUser')});
-			                	        						}
-			                	        					},
-			                	        					error : function(){
-			                	        						response.error({"code":500, "result":"服务端异常，请稍后再试"});
-			                	        					}
-			                	        				});
-		        							    	}else{
-		        							    		response.error({"code":500, "result":"用户不存在，toUser=" + speedDate.get('toUser')});
-		        							    	}
-		        							    },
-		        							    error : function(){
-		        							        response.error({"code":500, "result":"服务端异常，请稍后再试"});
-		        							    }
-		        							});
-		        						}else{
-		        							response.error({"code":500, "result":"用户对应的dynamicData不存在，fromUser=" + speedDate.get('fromUser')});
-		        						}
-		        					},
-		        					error : function(){
-		        						response.error({"code":500, "result":"服务端异常，请稍后再试"});
-		        					}
-		        				});
-					    	}else{
-					    		response.error({"code":500, "result":"用户不存在，fromUser=" + speedDate.get('fromUser')});
-					    	}
-					    },
-					    error : function(){
-					        response.error({"code":500, "result":"服务端异常，请稍后再试"});
-					    }
-					});
-				}else{
-					response.error({"code":500, "result":"找不到对应的邀约记录, speedDateId=" + speedDateId});
-				}
-			},
-			error : function(){
-				response.error({"code":500, "result":"服务端异常，请稍后再试"});
+		speedDateQuery.get(speedDateId).then(function(speedDate){
+			if(speedDate){
+				speedDate.set('status', 4);
+				speedDate.save();
+				//修改from用户状态
+				var user = new User();
+				user.id=speedDate.get('fromUser');
+				var userDynamicQuery  = new AV.Query(UserDynamicData);
+				userDynamicQuery.equalTo('userId', user);
+				userDynamicQuery.find().then(function(results){
+					if(results.length >0){
+						results[0].set('datingStatus', 4);
+						results[0].save();
+						//修改to用户状态
+						user.id=speedDate.get('toUser');
+						userDynamicQuery.equalTo('userId', user);
+				        userDynamicQuery.find().then(function(results){
+				        	if(results.length >0){
+    							results[0].set('datingStatus', 4);
+    							results[0].save();
+    							//返回当前快约记录
+    							response.success({'code':200,'results': speedDate});
+    						}else{
+    							response.error("用户dynamicData不存在，toUser=" + speedDate.get('toUser'));
+    						}
+				        },
+				        function(error){
+				        	response.error("服务端异常(setep=3), toUser=" + speedDate.get('toUser') + " ,message=" + error.message);
+				        });
+					}else{
+						response.error("用户dynamicData不存在, fromUser=" + speedDate.get('fromUser'));
+					}
+				},
+				function(error){
+					response.error("服务端异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message);
+				});
+			}else{
+				response.error("邀约记录不存在, speedDateId=" + speedDateId);
 			}
+		},
+		function(error){
+			response.error("服务端异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message);
 		});
 	}
 });
@@ -352,165 +320,145 @@ AV.Cloud.define('evaluationEach', function(request, response) {
 		response.error({"code":500, "result":"参数不正确，userId=" + userId + ",speedDateId=" + speedDateId + ",honesty=" + honesty + ",temperament=" + temperament + 
 			",talkative=" + talkative + ",seductive=" + seductive});
 	}else{
-		var speedDate = null;
 		var speedDateQuery = new AV.Query(SpeedDate);
-		speedDateQuery.get(speedDateId, {
-			success : function(result){
-				if(result){
-					speedDate = result;
-					var evaluatedUserId = null;
-					if(userId === speedDate.get('fromUser')){
-						if(speedDate.get('fromUserEvaStatus')){
-							response.success({"code":200, "result":"用户已经评价"});
-						}else{
-	    					evaluatedUserId = speedDate.get('toUser');
-	    					speedDate.set('fromUserEvaStatus', true);
-	    					if(speedDate.get('toUserEvaStatus')){
-	    						speedDate.set('status', 5);
-	    					}
-						}
-					}else if(userId === speedDate.get('toUser')){
-						if(speedDate.get('toUserEvaStatus')){
-							response.success({"code":200, "result":"用户已经评价"});
-						}else{
-	    					evaluatedUserId = speedDate.get('fromUser');
-	    					speedDate.set('toUserEvaStatus', true);
-	    					if(speedDate.get('fromUserEvaStatus')){
-	    						speedDate.set('status', 5);
-	    					}
-						}
-					}
-
-					var user = null;
-					var evaluatedUser = null;
-					var userQuery = new AV.Query(User);
-					userQuery.get(userId,{
-						success : function(result){
-							if(result){
-								user = result;
-								userQuery.get(evaluatedUserId, {
-									success : function(result){
-										if(result){
-											evaluatedUser = result;
-											//新增评价和修改用户状态
-											var evaluation = new Evaluation();
-											evaluation.save({
-								    			'evaluateUser' : user,
-							    				'evaluatedUser' : evaluatedUser,
-							    				'speedDate' : speedDate,
-								    			'honesty' : honesty,
-								    			'temperament' : temperament,
-								    			'talkative' : talkative,
-								    			'seductive' : seductive
-								    		},{
-									    	    success : function(evaluation){
-									    	    	//更新speeddate状态
-													speedDate.save();
-													//更新用户评价分数
-													var userScoreQuery = new AV.Query(UserScore);
-													userScoreQuery.equalTo('user', evaluatedUser.id);
-													userScoreQuery.find({
-														success : function(results){
-															var userScore = null;
-															if(results.length > 0){
-																//计算评价分
-																userScore = results[0];
-																userScore.set('count', userScore.get('count') + 1);
-																userScore.set('totalHonesty', userScore.get('totalHonesty') + honesty);
-																userScore.set('totalTalkative', userScore.get('totalTalkative') + talkative);
-																userScore.set('totalTemperament', userScore.get('totalTemperament') + temperament);
-																userScore.set('totalSeductive', userScore.get('totalSeductive') + seductive);
-																userScore.set('honesty', userScore.get('totalHonesty')/userScore.get('count'));
-																userScore.set('talkative', userScore.get('totalTalkative')/userScore.get('count'));
-																userScore.set('temperament', userScore.get('totalTemperament')/userScore.get('count'));
-																userScore.set('seductive', userScore.get('totalSeductive')/userScore.get('count'));
-																var score = userScore.get('honesty') * 0.35 + userScore.get('talkative') * 0.30 + userScore.get('temperament') * 0.20 + userScore.get('seductive') * 0.15;
-																userScore.set('score', score);
-																userScore.fetchWhenSave(true);
-																userScore.save();																
-																//更新状态
-												    	    	var userDynamicQuery  = new AV.Query(UserDynamicData);
-										        				userDynamicQuery.equalTo('userId', user);
-										        				userDynamicQuery.find({
-										        					success : function(results){
-										        						if(results.length > 0){
-										        							results[0].set('datingStatus', 1);
-					        												results[0].save();
-					        												response.success({'code':200,'results':"success"});
-										        						}else{
-										        							response.error({"code":500, "result":"服务端异常，请稍后再试(step=4),userid=" + user.id});
-										        						}
-										        					},
-										        					error :function(){
-										        						response.error({"code":500, "result":"服务端异常，请稍后再试(step=4),userid=" + user.id});
-										        					}
-										        				});
-															}else{
-																userScore = new UserScore();
-																userScore.save({
-															    	'user' : evaluatedUser.id,
-															    	'honesty' : honesty,
-															    	'talkative' : talkative,
-															    	'temperament' : temperament,
-															    	'seductive' : seductive,
-															    	'count' : 1,
-															    	'totalHonesty' : honesty,
-															    	'totalTalkative' : talkative,
-															    	'totalTemperament' : temperament,
-															    	'totalSeductive' : seductive,
-															    	'score' : honesty * 0.35 + talkative * 0.30 + temperament * 0.20 + seductive * 0.15
-															    },{
-															        success : function(userScore){
-															            //更新状态
-														    	    	var userDynamicQuery  = new AV.Query(UserDynamicData);
-												        				userDynamicQuery.equalTo('userId', user);
-												        				userDynamicQuery.find({
-												        					success : function(results){
-												        						if(results.length > 0){
-												        							results[0].set('datingStatus', 1);
-							        												results[0].save();
-							        												response.success({'code':200,'results':"success"});
-												        						}else{
-												        							response.error({"code":500, "result":"服务端异常，请稍后再试(step=4),userid=" + user.id});
-												        						}
-												        					},
-												        					error :function(){
-												        						response.error({"code":500, "result":"服务端异常，请稍后再试(step=4),userid=" + user.id});
-												        					}
-												        				});
-															        },
-															        error : function(){
-															            response.error(userScore);
-															        }
-															    });
-															}
-														}
-													});
-									    		},
-									    		error : function(){
-									    			response.error({"code":500, "result":"新增评价失败"});
-									    		}
-								    		});
-										}else{
-											response.error({"code":500, "result":"找不到被评价用户，userId=" + evaluatedUserId});
-										}
-									}
-								});
-							}else{
-								response.error({"code":500, "result":"找不到用户，userId=" + userId});
-							}
-						},
-						error : function(){
-							response.error({"code":500, "result":"服务端异常，请稍后再试，step=2"});
-						}
-					});
+		speedDateQuery.get(speedDateId).then(function(speedDate){
+			var evaluatedUserId = null;
+			if(userId === speedDate.get('fromUser')){
+				if(speedDate.get('fromUserEvaStatus')){
+					response.success({"code":200, "result":"用户已经评价"});
 				}else{
-					response.error({"code":500, "result":"找不到对应的SpeedDate记录，speedDateId=" + speedDateId});
+					evaluatedUserId = speedDate.get('toUser');
+					speedDate.set('fromUserEvaStatus', true);
+					if(speedDate.get('toUserEvaStatus')){
+						speedDate.set('status', 5);
+					}
 				}
-			},
-			error : function(){
-				response.error({"code":500, "result":"服务端异常，请稍后再试，step=1"});
+			}else if(userId === speedDate.get('toUser')){
+				if(speedDate.get('toUserEvaStatus')){
+					response.success({"code":200, "result":"用户已经评价"});
+				}else{
+					evaluatedUserId = speedDate.get('fromUser');
+					speedDate.set('toUserEvaStatus', true);
+					if(speedDate.get('fromUserEvaStatus')){
+						speedDate.set('status', 5);
+					}
+				}
 			}
+
+			var user = new User();
+			user.id = userId;
+			var evaluatedUser = new User();
+			evaluatedUser.id = evaluatedUserId;
+			//新增评价和修改用户状态
+			var evaluation = new Evaluation();
+			evaluation.set('evaluateUser',user);
+			evaluation.set('evaluatedUser', evaluatedUser);
+			evaluation.set('speedDate',speedDate);
+			evaluation.set('honesty',honesty);
+			evaluation.set('temperament',temperament);
+			evaluation.set('talkative',talkative);
+			evaluation.set('seductive',seductive);
+			evaluation.save().then(function(evaluation){
+				//更新speeddate状态
+				speedDate.save().then(function(speedDate){
+					//更新用户评价分数
+					var userScoreQuery = new AV.Query(UserScore);
+					userScoreQuery.equalTo('user', evaluatedUser.id);
+					userScoreQuery.find().then(function(results){
+						var userScore = null;
+						if(results.length > 0){
+							//计算评价分
+							userScore = results[0];
+							userScore.set('count', userScore.get('count') + 1);
+							userScore.set('totalHonesty', userScore.get('totalHonesty') + honesty);
+							userScore.set('totalTalkative', userScore.get('totalTalkative') + talkative);
+							userScore.set('totalTemperament', userScore.get('totalTemperament') + temperament);
+							userScore.set('totalSeductive', userScore.get('totalSeductive') + seductive);
+							userScore.set('honesty', userScore.get('totalHonesty')/userScore.get('count'));
+							userScore.set('talkative', userScore.get('totalTalkative')/userScore.get('count'));
+							userScore.set('temperament', userScore.get('totalTemperament')/userScore.get('count'));
+							userScore.set('seductive', userScore.get('totalSeductive')/userScore.get('count'));
+							var score = userScore.get('honesty') * 0.35 + userScore.get('talkative') * 0.30 + userScore.get('temperament') * 0.20 + userScore.get('seductive') * 0.15;
+							userScore.set('score', score);
+							userScore.save(null,{
+								fetchWhenSave:true
+							}).then(function(userScore){
+								//更新状态
+				    	    	var userDynamicQuery  = new AV.Query(UserDynamicData);
+		        				userDynamicQuery.equalTo('userId', user);
+		        				userDynamicQuery.find().then(function(results){
+		        					if(results.length > 0){
+		    							results[0].set('datingStatus', 1);
+										results[0].save().then(function(userDynamicData){
+											response.success({'code':200,'results':"success"});
+										},
+										function(error){
+											response.error({"code":"500", "result":"更新用户状态异常(setep=7), userDynamicDataId=" + userDynamicData.id + " ,message=" + error.message});
+										});
+		    						}else{
+		    							response.error({"code":"500", "result":"UserDynamicData不存在(setep=6), userId=" + user.id});
+		    						}
+		        				},
+		        				function(error){
+		        					response.error({"code":"500", "result":"查询用户DynamicData异常(setep=6), userId=" + user.id + " ,message=" + error.message});
+		        				});
+							},
+							function(error){
+								response.error({"code":"500", "result":"保存用户评分异常(setep=5), userScoreId=" + userScore.id + " ,message=" + error.message});
+							});
+						}else{
+							userScore = new UserScore();
+							userScore.set('user',evaluatedUser.id);
+							userScore.set('honesty',honesty);
+							userScore.set('talkative',talkative);
+							userScore.set('temperament',temperament);
+							userScore.set('seductive',seductive);
+							userScore.set('count',1);
+							userScore.set('totalHonesty',honesty);
+							userScore.set('totalTalkative',talkative);
+							userScore.set('totalTemperament',temperament);
+							userScore.set('totalSeductive',seductive);
+							userScore.set('score',honesty * 0.35 + talkative * 0.30 + temperament * 0.20 + seductive * 0.15);
+							userScore.save().then(function(userScore){
+								//更新状态
+				    	    	var userDynamicQuery  = new AV.Query(UserDynamicData);
+		        				userDynamicQuery.equalTo('userId', user);
+		        				userDynamicQuery.find().then(function(results){
+		        					if(results.length > 0){
+	        							results[0].set('datingStatus', 1);
+										results[0].save().then(function(userDynamicData){
+											response.success({'code':200,'results':"success"});
+										},
+										function(error){
+											response.error({"code":"500", "result":"更新用户状态异常(setep=11), userDynamicDataId=" + userDynamicData.id + " ,message=" + error.message});
+										});
+	        						}else{
+	        							response.error({"code":"500", "result":"UserDynamicData不存在(setep=10), userId=" + user.id});
+	        						}
+		        				},
+		        				function(error){
+		        					response.error({"code":"500", "result":"查询用户DynamicData异常(setep=9), userId=" + user.id + " ,message=" + error.message});
+		        				});
+							},
+							function(error){
+								response.error({"code":"500", "result":"保存用户评分异常(setep=8), userScoreId=" + userScore.id + " ,message=" + error.message});
+							});
+						}
+					},
+					function(error){
+						response.error({"code":"500", "result":"查询用户评分异常(setep=4), evaluatedUserId=" + evaluatedUserId + " ,message=" + error.message});
+					});
+				},
+				function(error){
+					response.error({"code":"500", "result":"保存speedDate状态异常(setep=3), speedDateId=" + speedDateId + " ,message=" + error.message});
+				});
+			},
+			function(error){
+				response.error({"code":"500", "result":"新增评价异常(setep=2) ,message=" + error.message});
+			});
+		},
+		function(error){
+			response.error({"code":"500", "result":"服务端异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
 		});
 	}
 });
