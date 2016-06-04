@@ -21,7 +21,7 @@ AV.Cloud.define('queryUserDynamicData', function(request, response) {
 				response.success({'code':200,'result': userDynamicData});
 			}
 		}, function(error) {
-		  	response.error({"code":500, "result":"false", "msg":error.message});
+		  	response.error({"code":500, "result":"查询dynamicData异常(step=1), userDynamicDataId=" + userDynamicDataId + ", errormsg:" + error.message});
 		});
 	}
 });
@@ -30,25 +30,20 @@ AV.Cloud.define('queryUserDynamicData', function(request, response) {
  * 定时检测用户在线状态方法
  */
 AV.Cloud.define('checkAndUpdateUserOnlineStatus', function(request, response) {
-	var query = new AV.Query(UserDynamicData);
-
+	var userDynamicQuery = new AV.Query(UserDynamicData);
 	var time = new Date().getTime() - 20 * 2 * 1000;
 	var date = new Date();    
 	date.setTime(time);
-	query.lessThan('updatedAt',date);
-
-	query.find({
-		success: function(results) {
-		    for (var i = 0; i < results.length; i++) {
-		        var object = results[i];
-		        object.set('onlineStatus', false);
-		        object.save();
-		    }
-			response.success(results.length + "个用户在线状态更新");
-		},
-		error: function(error) {
-		    response.error("Error " + error.code + " : " + error.message + " when query guys getRelationCountByStatus.");
-		}
+	userDynamicQuery.lessThan('updatedAt',date);
+	userDynamicQuery.find().then(function(results){
+		for (var i = 0; i < results.length; i++) {
+	        var object = results[i];
+	        object.set('onlineStatus', false);
+	        object.save();
+	    }
+		response.success({"code":200,"results":results.length + "个用户在线状态更新"});
+	}, function(error){
+		response.error({"code":500, "result":"查询用户列表异常(step=1), errormsg:" + error.message});
 	});
 });
 
@@ -88,14 +83,14 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 					response.success(finalResult);
 				},
 				function(error){
-					response.error({"code":500, "result":"服务端异常，请稍后再试"});
+					response.error({"code":500, "result":"查询用户列表(step=2), errormsg:" + error.message});
 				});
 			}else{
-				response.error({"code":500, "result":"找不到对应的userdynamicdata，userId=" + userDynamicDataId});
+				response.error({"code":500, "result":"dynamicData不存在(setep=1), userId=" + userDynamicDataId});
 			}
 		},
 		function(error){
-			response.error({"code":500, "result":"查询用户信息失败，userId=" + userId});
+			response.error({"code":500, "result":"查询dynamicData异常(step=1)，userId=" + userId + ", errormsg:" + error.message});
 		});
 	}
 });
@@ -130,7 +125,6 @@ AV.Cloud.define('likeSomeone', function(request, response) {
 	    				speedDatingQuery.find().then(function(results){
 							if(results.length > 0){
     				    		//存在记录，则修改状态
-    				    		//results[0].fetchWhenSave(true);
     				    		results[0].set('status', 2);
     				    		results[0].save();
 
@@ -138,7 +132,7 @@ AV.Cloud.define('likeSomeone', function(request, response) {
     				    		fromUserDynamic.save();
     				    		toUserDynamic.set("datingStatus", 2);
     				    		toUserDynamic.save();
-    				    		response.success({'code':200,'results':results[0]});
+    				    		response.success({"code":200, "results":results[0]});
     				    	}else{
     				    		//避免重复创建记录，先查询是否已经有喜欢对方的记录存在
     				    		speedDatingQuery = new AV.Query(SpeedDate);
@@ -149,7 +143,7 @@ AV.Cloud.define('likeSomeone', function(request, response) {
     							speedDatingQuery.find().then(function(results){
 									if(results.length > 0){
 									    //返回当前记录
-										response.success({'code':200,'results':results[0]});
+										response.success({"code":200, "results":results[0]});
 									}else{
 									    //不存在，则创建记录
 							    		var speedDate = new SpeedDate();
@@ -160,34 +154,34 @@ AV.Cloud.define('likeSomeone', function(request, response) {
 							    		speedDate.set('status',1);
 							    		speedDate.set('isValid', true);
 							    		speedDate.save().then(function(speedDate){
-							    			response.success({'code':200,'results':speedDate});
+							    			response.success({"code":200, "results":speedDate});
 							    		},
 							    		function(error){
-											response.error("服务端异常(setep=5) ,message=" + error.message);
+											response.error({"code":500, "result":"创建speeddate异常(setep=5) ,message=" + error.message});
 							    		});
 									}
     							},
     							function(error){
-									response.error("服务端异常(setep=4) ,message=" + error.message);
+    								response.error({"code":500, "result":"查询speeddate异常(setep=4) ,message=" + error.message});
     							});
     				    	}
 	    				},
 	    				function(error){
-							response.error("服务端异常(setep=3) ,message=" + error.message);
-	    				})
+							response.error({"code":500, "result":"查询speeddate异常(setep=3) ,message=" + error.message});
+	    				});
 					}else{
-						response.error("用户动态数据不存在(setep=2), toUserId=" + toUserId);
+						response.error({"code":500, "result":"dynamicData不存在(setep=2), toUserId=" + toUserId});
 					}
 			    },
 			    function(error){
-			    	response.error("服务端异常(setep=2)，toUserId=" + toUserId + " ,message=" + error.message);
-			    })
+			    	response.error({"code":500, "result":"查询userDynamic异常(setep=2), toUserId=" + toUserId + " ,message=" + error.message});
+			    });
 			}else{
-				response.error("用户动态数据不存在(setep=1), fromUserId=" + fromUserId);
+				response.error({"code":500, "result":"dynamicData不存在(setep=1), fromUserId=" + fromUserId});
 			}
 		},
 		function(error){
-			response.error("服务端异常(setep=1)，fromUserId=" + fromUserId + " ,message=" + error.message);
+			response.error({"code":500, "result":"查询userDynamic异常(setep=1), fromUserId=" + fromUserId + " ,message=" + error.message});
 		});
 	}
 });
@@ -214,36 +208,44 @@ AV.Cloud.define('goTogther', function(request, response) {
 				userDynamicQuery.find().then(function(results){
 					if(results.length >0){
 						results[0].set('datingStatus', 3);
-						results[0].save();
-						//修改to用户状态
-						user.id=speedDate.get('toUser');
-						userDynamicQuery.equalTo('userId', user);
-				        userDynamicQuery.find().then(function(results){
-				        	if(results.length >0){
-    							results[0].set('datingStatus', 3);
-    							results[0].save();
-    							//返回当前快约记录
-    							response.success({'code':200,'results': speedDate});
-    						}else{
-    							response.error("用户dynamicData不存在，toUser=" + speedDate.get('toUser'));
-    						}
-				        },
-				        function(error){
-				        	response.error("服务端异常(setep=3), toUser=" + speedDate.get('toUser') + " ,message=" + error.message);
-				        });
+						results[0].save().then(function(userDynamicData){
+							//修改to用户状态
+							user.id=speedDate.get('toUser');
+							userDynamicQuery.equalTo('userId', user);
+					        userDynamicQuery.find().then(function(results){
+					        	if(results.length >0){
+	    							results[0].set('datingStatus', 3);
+	    							results[0].save().then(function(userDynamicData){
+	    								//返回当前快约记录
+	    								response.success({"code":200, "results": speedDate});
+	    							},
+	    							function(error){
+	    								response.error({"code":500, "result":"更新dynamicData异常(setep=5), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
+	    							});
+	    						}else{
+	    							response.error({"code":500, "result":"dynamicData不存在(setep=4), toUser=" + speedDate.get('toUser')});
+	    						}
+					        },
+					        function(error){
+					        	response.error({"code":500, "result":"查询dynamicDate异常(setep=4), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
+					        });
+						},
+						function(error){
+							response.error({"code":500, "result":"更新dynamicData异常(setep=3), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
+						});
 					}else{
-						response.error("用户dynamicData不存在, fromUser=" + speedDate.get('fromUser'));
+						response.error({"code":500, "result":"dynamicData不存在(setep=2), fromUser=" + speedDate.get('fromUser')});
 					}
 				},
 				function(error){
-					response.error("服务端异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message);
+					response.error({"code":500, "result":"查询dynamicDate异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
 				});
 			}else{
-				response.error("邀约记录不存在, speedDateId=" + speedDateId);
+				response.error({"code":500, "result":"speedDate不存在(setep=1), speedDateId=" + speedDateId});
 			}
 		},
 		function(error){
-			response.error("服务端异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message);
+			response.error({"code":500, "result":"查询speedDate异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
 		});
 	}
 });
@@ -271,36 +273,44 @@ AV.Cloud.define('endSpeedDate', function(request, response) {
 				userDynamicQuery.find().then(function(results){
 					if(results.length >0){
 						results[0].set('datingStatus', 4);
-						results[0].save();
-						//修改to用户状态
-						user.id=speedDate.get('toUser');
-						userDynamicQuery.equalTo('userId', user);
-				        userDynamicQuery.find().then(function(results){
-				        	if(results.length >0){
-    							results[0].set('datingStatus', 4);
-    							results[0].save();
-    							//返回当前快约记录
-    							response.success({'code':200,'results': speedDate});
-    						}else{
-    							response.error("用户dynamicData不存在，toUser=" + speedDate.get('toUser'));
-    						}
-				        },
-				        function(error){
-				        	response.error("服务端异常(setep=3), toUser=" + speedDate.get('toUser') + " ,message=" + error.message);
-				        });
+						results[0].save().then(function(userDynamicData){
+							//修改to用户状态
+							user.id=speedDate.get('toUser');
+							userDynamicQuery.equalTo('userId', user);
+					        userDynamicQuery.find().then(function(results){
+					        	if(results.length >0){
+	    							results[0].set('datingStatus', 4);
+	    							results[0].save().then(function(userDynamicData){
+	    								//返回当前快约记录
+	    								response.success({"code":200, "results": speedDate});
+	    							},
+	    							function(error){
+	    								response.error({"code":500, "result":"更新dynamicData异常(setep=5), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
+	    							});
+	    						}else{
+	    							response.error({"code":500, "result":"dynamicData不存在(setep=4), toUser=" + speedDate.get('toUser')});
+	    						}
+					        },
+					        function(error){
+					        	response.error({"code":500, "result":"查询dynamicDate异常(setep=4), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
+					        });
+						},
+						function(error){
+							response.error({"code":500, "result":"更新dynamicData异常(setep=3), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
+						});
 					}else{
-						response.error("用户dynamicData不存在, fromUser=" + speedDate.get('fromUser'));
+						response.error({"code":500, "result":"dynamicData不存在(setep=2), fromUser=" + speedDate.get('fromUser')});
 					}
 				},
 				function(error){
-					response.error("服务端异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message);
+					response.error({"code":500, "result":"查询dynamicDate异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
 				});
 			}else{
-				response.error("邀约记录不存在, speedDateId=" + speedDateId);
+				response.error({"code":500, "result":"speedDate不存在(setep=1), speedDateId=" + speedDateId});
 			}
 		},
 		function(error){
-			response.error("服务端异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message);
+			response.error({"code":500, "result":"查询speedDate异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
 		});
 	}
 });
@@ -391,21 +401,21 @@ AV.Cloud.define('evaluationEach', function(request, response) {
 		        					if(results.length > 0){
 		    							results[0].set('datingStatus', 1);
 										results[0].save().then(function(userDynamicData){
-											response.success({'code':200,'results':"success"});
+											response.success({"code":200, "results":"success"});
 										},
 										function(error){
-											response.error({"code":"500", "result":"更新用户状态异常(setep=7), userDynamicDataId=" + userDynamicData.id + " ,message=" + error.message});
+											response.error({"code":500, "result":"更新用户状态异常(setep=7), userDynamicDataId=" + userDynamicData.id + " ,message=" + error.message});
 										});
 		    						}else{
-		    							response.error({"code":"500", "result":"UserDynamicData不存在(setep=6), userId=" + user.id});
+		    							response.error({"code":500, "result":"UserDynamicData不存在(setep=6), userId=" + user.id});
 		    						}
 		        				},
 		        				function(error){
-		        					response.error({"code":"500", "result":"查询用户DynamicData异常(setep=6), userId=" + user.id + " ,message=" + error.message});
+		        					response.error({"code":500, "result":"查询用户DynamicData异常(setep=6), userId=" + user.id + " ,message=" + error.message});
 		        				});
 							},
 							function(error){
-								response.error({"code":"500", "result":"保存用户评分异常(setep=5), userScoreId=" + userScore.id + " ,message=" + error.message});
+								response.error({"code":500, "result":"保存用户评分异常(setep=5), userScoreId=" + userScore.id + " ,message=" + error.message});
 							});
 						}else{
 							userScore = new UserScore();
@@ -428,38 +438,38 @@ AV.Cloud.define('evaluationEach', function(request, response) {
 		        					if(results.length > 0){
 	        							results[0].set('datingStatus', 1);
 										results[0].save().then(function(userDynamicData){
-											response.success({'code':200,'results':"success"});
+											response.success({"code":200,"results":"success"});
 										},
 										function(error){
-											response.error({"code":"500", "result":"更新用户状态异常(setep=11), userDynamicDataId=" + userDynamicData.id + " ,message=" + error.message});
+											response.error({"code":500, "result":"更新用户状态异常(setep=11), userDynamicDataId=" + userDynamicData.id + " ,message=" + error.message});
 										});
 	        						}else{
-	        							response.error({"code":"500", "result":"UserDynamicData不存在(setep=10), userId=" + user.id});
+	        							response.error({"code":500, "result":"UserDynamicData不存在(setep=10), userId=" + user.id});
 	        						}
 		        				},
 		        				function(error){
-		        					response.error({"code":"500", "result":"查询用户DynamicData异常(setep=9), userId=" + user.id + " ,message=" + error.message});
+		        					response.error({"code":500, "result":"查询用户DynamicData异常(setep=9), userId=" + user.id + " ,message=" + error.message});
 		        				});
 							},
 							function(error){
-								response.error({"code":"500", "result":"保存用户评分异常(setep=8), userScoreId=" + userScore.id + " ,message=" + error.message});
+								response.error({"code":500, "result":"保存用户评分异常(setep=8), userScoreId=" + userScore.id + " ,message=" + error.message});
 							});
 						}
 					},
 					function(error){
-						response.error({"code":"500", "result":"查询用户评分异常(setep=4), evaluatedUserId=" + evaluatedUserId + " ,message=" + error.message});
+						response.error({"code":500, "result":"查询用户评分异常(setep=4), evaluatedUserId=" + evaluatedUserId + " ,message=" + error.message});
 					});
 				},
 				function(error){
-					response.error({"code":"500", "result":"保存speedDate状态异常(setep=3), speedDateId=" + speedDateId + " ,message=" + error.message});
+					response.error({"code":500, "result":"保存speedDate状态异常(setep=3), speedDateId=" + speedDateId + " ,message=" + error.message});
 				});
 			},
 			function(error){
-				response.error({"code":"500", "result":"新增评价异常(setep=2) ,message=" + error.message});
+				response.error({"code":500, "result":"新增评价异常(setep=2) ,message=" + error.message});
 			});
 		},
 		function(error){
-			response.error({"code":"500", "result":"查询SpeedDate异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
+			response.error({"code":500, "result":"查询SpeedDate异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
 		});
 	}
 });
@@ -481,10 +491,10 @@ AV.Cloud.define('checkAndUpdateSpeedDataValid', function(request, response) {
 	        object.set('isValid', false);
 	        object.save();
 	    }
-		response.success(results.length + "个SpeedDate记录无效");
+		response.success({"code":200,"results":results.length + "个SpeedDate记录无效"});
 	},
 	function(error){
-		response.error({"code":"500", "result":"查询SpeedDate异常(setep=1) ,message=" + error.message});
+		response.error({"code":500, "result":"查询SpeedDate异常(setep=1) ,message=" + error.message});
 	});
 });
 
@@ -506,17 +516,17 @@ AV.Cloud.define('datingRoute', function(request, response) {
 			speedDateRoute.set('speedDate',speedDate);
 			speedDateRoute.set('coordinate',point);
 			speedDateRoute.save().then(function(speedDateRoute){
-				response.success({'code':200,'results':"success"});
+				response.success({"code":200, "results":"success"});
 			},
 			function(error){
-				response.error({"code":"500", "result":"保存数据异常, message=" + error.message});
+				response.error({"code":500, "result":"保存数据异常, message=" + error.message});
 			});
 		}else{
-			response.error({"code":"500", "result":"SpeedDate不存在(setep=1), speedDateId=" + speedDateId});
+			response.error({"code":500, "result":"SpeedDate不存在(setep=1), speedDateId=" + speedDateId});
 		}
 	},
 	function(error){
-		response.error({"code":"500", "result":"查询SpeedDate异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
+		response.error({"code":500, "result":"查询SpeedDate异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
 	});
 });
 
