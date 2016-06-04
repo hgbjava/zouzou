@@ -488,6 +488,11 @@ AV.Cloud.define('checkAndUpdateSpeedDataValid', function(request, response) {
 	});
 });
 
+/**
+ * 保存用户走走路线坐标
+ * sample param: {"speedDateId":"569a01c400b00ef385062359","latitude":11.4, "longitude":11.4}
+*/
+
 AV.Cloud.define('datingRoute', function(request, response) {
 	var speedDateId = request.params.speedDateId;
 	var latitude = request.params.latitude;
