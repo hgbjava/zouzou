@@ -17,12 +17,12 @@ var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
  	}else{
  		var fromUserQuery = new AV.Query(SpeedDate);
  		fromUserQuery.equalTo('fromUser',userId);
-		fromUserQuery.containsAll('status',[2,3,4]);
+		fromUserQuery.containedIn('status',[2,3,4]);
 		fromUserQuery.equalTo('isValid',true);
 
 		var toUserQuery = new AV.Query(SpeedDate);
  		toUserQuery.equalTo('toUser',userId);
-		toUserQuery.containsAll('status',[2,3,4]);
+		toUserQuery.containedIn('status',[2,3,4]);
 		toUserQuery.equalTo('isValid',true);
 		var query = AV.Query.or(fromUserQuery, toUserQuery);
 		query.find().then(function(results){
