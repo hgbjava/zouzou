@@ -8,12 +8,40 @@ var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
 
 /**
  * 查询用户动态数据
+ * param: {"userId":"573050921532bc0065092c58"}
+ */
+ AV.Cloud.define('querySpeedDate', function(request, response) {
+ 	var userId = request.params.userId;
+ 	if(!userId || userId === ''){
+ 		response.error({"code":500, "result":"参数userId不能为空"});
+ 	}else{
+ 		var fromUserQuery = new AV.Query(SpeedDate);
+ 		fromUserQuery.equalTo('fromUser',userId);
+		fromUserQuery.containsAll('status',[2,3,4]);
+		fromUserQuery.equalTo('isValid',true);
+
+		var toUserQuery = new AV.Query(SpeedDate);
+ 		toUserQuery.equalTo('toUser',userId);
+		toUserQuery.containsAll('status',[2,3,4]);
+		toUserQuery.equalTo('isValid',true);
+		var query = AV.Query.or(fromUserQuery, toUserQuery);
+		query.find().then(function(results){
+			response.success({"code":200, "results":results[0]});
+		},
+		function(error){
+			response.error({"code":500, "result":"查询用户邀约记录异常(step=1), errormsg:" + error.message});
+		});
+ 	}
+ });
+
+/**
+ * 查询用户动态数据
  * param: {"userDynamicDataId":"567e966e00b0adf744f09b09"}
  */
 AV.Cloud.define('queryUserDynamicData', function(request, response) {
 	var userDynamicDataId = request.params.userDynamicDataId;
 	if(!userDynamicDataId || userDynamicDataId === ''){
-		response.error({"code":500, "result":"userDynamicDataId不为空"});
+		response.error({"code":500, "result":"参数userDynamicDataId不为空"});
 	}else{
 		var userDynamicQuery  = new AV.Query(UserDynamicData);
 		userDynamicQuery.get(userDynamicDataId).then(function(userDynamicData) {
