@@ -21,7 +21,7 @@ AV.Cloud.define('addFrend', function(request, response) {
 		var frendQuery = new AV.Query(Frend);
 		frendQuery.equalTo('userId', userId);
 		frendQuery.equalTo('frendUserId', frendUserId);
-		frendQuery.fin().then(function(results){
+		frendQuery.find().then(function(results){
 			var frend = null;
 			if(results.length>0){
 				/*存在好友记录，修改时间*/
