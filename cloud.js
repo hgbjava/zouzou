@@ -5,6 +5,51 @@ var User = AV.Object.extend('_User');
 var Evaluation = AV.Object.extend('Evaluation');
 var UserScore = AV.Object.extend('UserScore');
 var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
+var Frend = AV.Object.extend('Frend');
+
+
+/**
+ * 添加好友
+ * param: {"userId":"573050921532bc0065092c58","frendUserId":"5718eede71cfe4006dccf237"}
+ */
+AV.Cloud.define('addFrend', function(request, response) {
+	var userId = request.params.userId;
+	var frendUserId = request.params.frendUserId;
+	if(!userId || userId==='' || !frendUserId || frendUserId===''){
+		response.error({"code":500, "result":"参数不能为空"});
+	}else{
+		var frendQuery = new AV.Query(Frend);
+		frendQuery.equalTo('userId', userId);
+		frendQuery.equalTo('frendUserId', frendUserId);
+		frendQuery.fin().then(function(results){
+			var frend = null;
+			if(results.length>0){
+				##存在好友记录，修改时间
+				frend = results[0];
+				frend.save().then(function(frend){
+					response.success({"code":200, "results":frend});
+				},
+				function(error){
+					response.error({"code":500, "result":"更新好友异常, errormsg:" + error.message});
+				});
+			}else{
+				##不存在则创建记录
+				frend = new Frend();
+				frend.set('userId', userId);
+				frend.set('frendUserId', frendUserId);
+				frend.save().then(function(frend){
+					response.success({"code":200, "results":frend});
+				},
+				function(error){
+					response.error({"code":500, "result":"保存好友异常, errormsg:" + error.message});
+				});
+			}
+		},
+		function(error){
+			response.error({"code":500, "result":"查询好友记录异常, errormsg:" + error.message});
+		});
+	}
+});
 
 /**
  * 查询用户动态数据
