@@ -9,6 +9,31 @@ var Frend = AV.Object.extend('Frend');
 
 
 /**
+ * 获取好友列表
+ * param: {"userId":"573050921532bc0065092c58"}
+ */
+ AV.Cloud.define('frendList', function(request, response) {
+ 	var userId = request.params.userId;
+ 	var count = request.params.count;
+ 	if(!userId || userId===''){
+		response.error({"code":500, "result":"参数不能为空"});
+	}else{
+		if(!count || count <=0){
+			count = 3;
+		}
+		var frendQuery = new AV.Query(Frend);
+		frendQuery.equalTo('userId', userId);
+		frendQuery.descending('updatedAt');
+		frendQuery.limit(count);
+		frendQuery.find().then(function(results){
+			return response.success({"code":200, "results":results});
+		},
+		function(error){
+			response.error({"code":500, "result":"查询好友列表异常, userId=" + userId + ", errormsg:" + error.message});
+		});
+	}
+ });
+/**
  * 添加好友
  * param: {"userId":"573050921532bc0065092c58","frendUserId":"5718eede71cfe4006dccf237"}
  */
