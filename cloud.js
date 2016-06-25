@@ -24,7 +24,7 @@ AV.Cloud.define('addFrend', function(request, response) {
 		frendQuery.fin().then(function(results){
 			var frend = null;
 			if(results.length>0){
-				##存在好友记录，修改时间
+				/*存在好友记录，修改时间*/
 				frend = results[0];
 				frend.save().then(function(frend){
 					response.success({"code":200, "results":frend});
@@ -33,7 +33,7 @@ AV.Cloud.define('addFrend', function(request, response) {
 					response.error({"code":500, "result":"更新好友异常, errormsg:" + error.message});
 				});
 			}else{
-				##不存在则创建记录
+				/*不存在则创建记录*/
 				frend = new Frend();
 				frend.set('userId', userId);
 				frend.set('frendUserId', frendUserId);
