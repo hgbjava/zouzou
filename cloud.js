@@ -286,9 +286,9 @@ AV.Cloud.define('likeSomeone', function(request, response) {
 
 /**
  * 走起接口
- * param example: {"speedDateId":"569a01c400b00ef385062359"}
+ * param example: {"speedDateId":"576a859280dda4005fb59dae"}
  */
-AV.Cloud.define('goTogther', function(request, response) {
+AV.Cloud.define('goTogether', function(request, response) {
 	var speedDateId = request.params.speedDateId;
 	if(!speedDateId || speedDateId === ''){
 		response.error('参数speedDateId不能为空');
