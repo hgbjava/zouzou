@@ -43,7 +43,7 @@ AV.Cloud.define('addFriend', function(request, response) {
 	if(!userId || userId==='' || !friendUserId || friendUserId===''){
 		response.error({"code":500, "result":"参数不能为空"});
 	}else{
-		var friendQuery = new AV.Query(Frend);
+		var friendQuery = new AV.Query(Friend);
 		friendQuery.equalTo('userId', userId);
 		friendQuery.equalTo('friendUserId', friendUserId);
 		friendQuery.find().then(function(results){
@@ -62,7 +62,7 @@ AV.Cloud.define('addFriend', function(request, response) {
 				friend = new Friend();
 				friend.set('userId', userId);
 				friend.set('friendUserId', friendUserId);
-				friend.save().then(function(frend){
+				friend.save().then(function(friend){
 					response.success({"code":200, "results":friend});
 				},
 				function(error){
