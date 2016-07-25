@@ -19,7 +19,7 @@ AV.Cloud.define('userCoordinate', function(request, response) {
 		userDynamicQuery.find().then(function(results){
 			if(results.length >0){
 				var userDynamicData = results[0];
-				return response.success({"code":200, "result":userDynamicData});
+				return response.success({"code":200, "result":userDynamicData.get("location")});
 			}else{
 				response.error({"code":500, "result":"dynamicData不存在(setep=2), userId=" + userId});
 			}
