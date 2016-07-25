@@ -7,6 +7,28 @@ var UserScore = AV.Object.extend('UserScore');
 var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
 var Friend = AV.Object.extend('Friend');
 
+AV.Cloud.define('userCoordinate', function(request, response) {
+	var userId = request.params.userId;
+	if(!userId || userId === ''){
+		response.error('参数userId不能为空');
+	}else{
+		var user = new User();
+		user.id = userId;
+		var userDynamicQuery = new AV.Query(UserDynamicData);
+		userDynamicQuery.equalTo('userId', user);
+		userDynamicQuery.find().then(function(results){
+			if(results.length >0){
+				var userDynamicData = results[0];
+				return response.success({"code":200, "result":userDynamicData.location});
+			}else{
+				response.error({"code":500, "result":"dynamicData不存在(setep=2), userId=" + userId});
+			}
+		},
+		function(error){
+			response.error({"code":500, "result":"查询UserDynamic异常(setep=1), userId=" + userId + ", errormsg:" + error.message});
+		});
+	}
+}
 
 /**
  * 获取好友列表
