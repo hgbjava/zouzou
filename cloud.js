@@ -28,7 +28,7 @@ AV.Cloud.define('userCoordinate', function(request, response) {
 			response.error({"code":500, "result":"查询UserDynamic异常(setep=1), userId=" + userId + ", errormsg:" + error.message});
 		});
 	}
-}
+});
 
 /**
  * 获取好友列表
