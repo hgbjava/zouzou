@@ -7,6 +7,25 @@ var UserScore = AV.Object.extend('UserScore');
 var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
 var Friend = AV.Object.extend('Friend');
 
+AV.Cloud.define('setColor', function(request, response){
+	var speedDateId = request.params.speedDateId;
+	var color = request.params.color;
+	if(!speedDateId || speedDateId==='' || !color || color===''){
+		response.error({"code":500, "result":"参数不能为空"});
+	}else{
+		var speedDateQuery = new AV.Query(SpeedDate);
+		speedDateQuery.get(speedDateId).then(function(speedDate){
+			if(speedDate){
+				speedDate.set('color', color);
+				speedDate.save();
+			}
+		},
+		function(error){
+			response.error({"code":500, "result":"speedDate不存在(setep=1), speedDateId=" + speedDateId});
+		});
+	}
+});
+
 AV.Cloud.define('userCoordinate', function(request, response) {
 	var userId = request.params.userId;
 	if(!userId || userId === ''){
@@ -62,6 +81,7 @@ AV.Cloud.define('userCoordinate', function(request, response) {
 AV.Cloud.define('addFriend', function(request, response) {
 	var userId = request.params.userId;
 	var friendUserId = request.params.friendUserId;
+	var color = request.params.color;
 	if(!userId || userId==='' || !friendUserId || friendUserId===''){
 		response.error({"code":500, "result":"参数不能为空"});
 	}else{
@@ -84,6 +104,7 @@ AV.Cloud.define('addFriend', function(request, response) {
 				friend = new Friend();
 				friend.set('userId', userId);
 				friend.set('friendUserId', friendUserId);
+				friend.set('color', color);
 				friend.save().then(function(friend){
 					response.success({"code":200, "results":friend});
 				},
