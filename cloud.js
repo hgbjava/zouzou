@@ -18,6 +18,7 @@ AV.Cloud.define('setColor', function(request, response){
 			if(speedDate){
 				speedDate.set('color', color);
 				speedDate.save();
+				return response.success({"code":200, "result":speedDate});
 			}
 		},
 		function(error){
