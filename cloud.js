@@ -468,7 +468,7 @@ AV.Cloud.define('endSpeedDate', function(request, response) {
 
 /**
  * 相互评价
- * param sample: {"userId":"567e95ec60b2e1871e04a8ae","honesty":4,"talkative":4,"temperament":4,"seductive":4,"speedDateId":"569a01c400b00ef385062359"}
+ * param: {"userId":"567e95ec60b2e1871e04a8ae","honesty":4,"talkative":4,"temperament":4,"seductive":4,"speedDateId":"569a01c400b00ef385062359"}
  */
 AV.Cloud.define('evaluationEach', function(request, response) {
 	var userId = request.params.userId;
@@ -651,7 +651,7 @@ AV.Cloud.define('checkAndUpdateSpeedDataValid', function(request, response) {
 
 /**
  * 保存用户走走路线坐标
- * sample param: {"speedDateId":"569a01c400b00ef385062359","latitude":11.4, "longitude":11.4}
+ * sample: {"speedDateId":"569a01c400b00ef385062359","latitude":11.4, "longitude":11.4}
 */
 
 AV.Cloud.define('datingRoute', function(request, response) {
