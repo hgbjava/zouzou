@@ -1,0 +1,69 @@
+接口名称：setColor
+接口说明：设置当前走走color
+参数列表：{"speedDateId":"57ea26282e958a00545256e0","color":"2"}
+返回值：返回当前speedDate数据
+
+接口名：userCoordinate
+接口说明：获取用户坐标，根据用户id查询UserDynamicData中的坐标信息
+参数列表：param: {"userId":"573050921532bc0065092c58"}
+返回值：坐标值
+
+接口名：friendList
+接口说明：查询当前用户的好友列表，查询Friend表
+参数列表：param: {"userId":"573050921532bc0065092c58"}
+返回值：Friend列表
+
+接口名：addFriend
+接口说明：添加好友，如果好友已经存在则修改color值，否则新增Friend记录
+参数列表：param: {"userId":"573050921532bc0065092c58","frendUserId":"5718eede71cfe4006dccf237","color":"2"}
+返回值：返回当前Friend记录
+
+接口名：querySpeedDate
+接口说明：根据用户id查询当前用户走走记录(一个用户当前有且仅有一条走走记录，状态为2双方喜欢，3走起，4结束)
+参数列表：param: {"userId":"573050921532bc0065092c58"}
+返回值：如果存在则返回记录，否则返回空
+
+接口名：queryUserDynamicData
+接口说明：查询当前用户动态数据
+参数列表：param: {"userDynamicDataId":"567e966e00b0adf744f09b09"}
+返回值：返回用户动态数据
+
+接口名：queryNearlyUsers
+接口说明：根据当前用户动态信息查询附近好友列表
+参数列表：param: {"userDynamicDataId":"567e966e00b0adf744f09b09"}
+返回值：返回用户列表
+
+接口名：likeSomeone
+接口说明：喜欢某人，当对方已经喜欢自己，则会修改走走记录状态为2，否则新建一条走走记录
+参数列表：param: {"fromUserId":"565eb4fd60b25b0435209c10","toUserId":"567e95ec60b2e1871e04a8ae"}
+返回值：返回当前走走记录
+
+接口名：goTogether
+接口说明：走起接口，有用户在app中触发走起请求，对用走走状态为3
+参数列表：param example: {"speedDateId":"576a859280dda4005fb59dae"}
+返回值：返回当前走走记录
+
+接口名：endSpeedDate
+接口说明：走走结束接口，app走走到时发起请求，对应走走记录状态为4
+参数列表：param example: {"speedDateId":"569a01c400b00ef385062359"}
+返回值：返回当前走走记录
+
+接口名：evaluationEach
+接口说明：走走互评接口
+参数列表：param: {"userId":"567e95ec60b2e1871e04a8ae","honesty":4,"talkative":4,"temperament":4,"seductive":4,"speedDateId":"569a01c400b00ef385062359"}
+返回值：{"code":200, "results":"success"}
+
+接口名：datingRoute
+接口说明：走走路径报告接口，定时上报用户走走的坐标
+参数列表：sample: {"speedDateId":"569a01c400b00ef385062359","latitude":11.4, "longitude":11.4}
+返回值：{"code":200, "results":"success"}
+
+接口名：checkAndUpdateSpeedDataValid
+接口说明：检查用户邀约有效性，针对状态为1的走走记录，后台任务
+参数列表：无
+返回值：无
+
+接口名：checkAndUpdateUserOnlineStatus
+接口说明：定时检查用户在线状态，超过一定时间则设置为非在线状态，后台任务
+参数列表：无
+返回值：无

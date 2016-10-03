@@ -7,6 +7,10 @@ var UserScore = AV.Object.extend('UserScore');
 var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
 var Friend = AV.Object.extend('Friend');
 
+/**
+ * 设置当前走走记录color
+ * 参数：{"speedDateId":"57ea26282e958a00545256e0","color":"2"}
+*/
 AV.Cloud.define('setColor', function(request, response){
 	var speedDateId = request.params.speedDateId;
 	var color = request.params.color;
@@ -27,6 +31,10 @@ AV.Cloud.define('setColor', function(request, response){
 	}
 });
 
+/**
+ * 获取用户坐标
+ * param: {"userId":"573050921532bc0065092c58"}
+ */
 AV.Cloud.define('userCoordinate', function(request, response) {
 	var userId = request.params.userId;
 	if(!userId || userId === ''){
@@ -77,7 +85,7 @@ AV.Cloud.define('userCoordinate', function(request, response) {
  });
 /**
  * 添加好友
- * param: {"userId":"573050921532bc0065092c58","frendUserId":"5718eede71cfe4006dccf237"}
+ * param: {"userId":"573050921532bc0065092c58","frendUserId":"5718eede71cfe4006dccf237","color":"2"}
  */
 AV.Cloud.define('addFriend', function(request, response) {
 	var userId = request.params.userId;
@@ -94,6 +102,7 @@ AV.Cloud.define('addFriend', function(request, response) {
 			if(results.length>0){
 				/*存在好友记录，修改时间*/
 				friend = results[0];
+				friend.set('color', color);
 				friend.save().then(function(friend){
 					response.success({"code":200, "results":friend});
 				},
