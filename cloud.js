@@ -250,7 +250,8 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
  * 喜欢接口
  * param: {"fromUserId":"565eb4fd60b25b0435209c10","toUserId":"567e95ec60b2e1871e04a8ae"}
  */
-AV.Cloud.define('likeSomeone', function(request, response) {
+
+ AV.Cloud.define('likeSomeone', function(request, response) {
 	var fromUserId = request.params.fromUserId;
 	var toUserId = request.params.toUserId;
 	if(!fromUserId || fromUserId === '' || !toUserId || toUserId === ''){
@@ -263,70 +264,80 @@ AV.Cloud.define('likeSomeone', function(request, response) {
 		userDynamicQuery.find().then(function(results){
 			if(results.length > 0){
 				var fromUserDynamic = results[0];
-				user.id = toUserId;
-			    userDynamicQuery.equalTo('userId',user);
-			    userDynamicQuery.find().then(function(results){
-					if(results.length > 0){
-						var toUserDynamic = results[0];
-						var speedDatingQuery = new AV.Query(SpeedDate);
-	    				speedDatingQuery.equalTo('fromUser',toUserId);
-	    				speedDatingQuery.equalTo('toUser',fromUserId);
-	    				speedDatingQuery.equalTo('status',1);
-	    				speedDatingQuery.equalTo('isValid',true);
-	    				speedDatingQuery.find().then(function(results){
-							if(results.length > 0){
-    				    		//存在记录，则修改状态
-    				    		results[0].set('status', 2);
-    				    		results[0].save();
-
-    				    		fromUserDynamic.set('datingStatus',2);
-    				    		fromUserDynamic.save();
-    				    		toUserDynamic.set("datingStatus", 2);
-    				    		toUserDynamic.save();
-    				    		response.success({"code":200, "results":results[0]});
-    				    	}else{
-    				    		//避免重复创建记录，先查询是否已经有喜欢对方的记录存在
-    				    		speedDatingQuery = new AV.Query(SpeedDate);
-    				    		speedDatingQuery.equalTo('fromUser',fromUserId);
-    							speedDatingQuery.equalTo('toUser',toUserId);
-    							speedDatingQuery.containedIn('status',[1,2,3,4]);
-    							speedDatingQuery.equalTo('isValid',true);
-    							speedDatingQuery.find().then(function(results){
+				if(fromUserDynamic.get('datingStatus')>1 || fromUserDynamic.get('datingStatus')<5){
+					//当前用户还处于走走中
+					return response.success({"code":200, "results":"can't like other more."});
+				}else{
+					user.id = toUserId;
+				    userDynamicQuery.equalTo('userId',user);
+				    userDynamicQuery.find().then(function(results){
+						if(results.length > 0){
+							var toUserDynamic = results[0];
+							//查询对方是否已经存在走走中
+							if(fromUserDynamic.get('datingStatus')>1 || fromUserDynamic.get('datingStatus')<5){
+								//用户当前还处于走走中
+								return response.success({"code":200, "results":"can't like other more."});
+							}else{
+								var speedDatingQuery = new AV.Query(SpeedDate);
+			    				speedDatingQuery.equalTo('fromUser',toUserId);
+			    				speedDatingQuery.equalTo('toUser',fromUserId);
+			    				speedDatingQuery.equalTo('status',1);
+			    				speedDatingQuery.equalTo('isValid',true);
+			    				speedDatingQuery.find().then(function(results){
 									if(results.length > 0){
-									    //返回当前记录
-										response.success({"code":200, "results":results[0]});
-									}else{
-									    //不存在，则创建记录
-							    		var speedDate = new SpeedDate();
-							    		speedDate.set('fromUser',fromUserId);
-							    		speedDate.set('toUser',toUserId);
-							    		speedDate.set('fromUserEvaStatus',false);
-							    		speedDate.set('toUserEvaStatus',false);
-							    		speedDate.set('status',1);
-							    		speedDate.set('isValid', true);
-							    		speedDate.save().then(function(speedDate){
-							    			response.success({"code":200, "results":speedDate});
-							    		},
-							    		function(error){
-											response.error({"code":500, "result":"创建speeddate异常(setep=5) ,message=" + error.message});
-							    		});
-									}
-    							},
-    							function(error){
-    								response.error({"code":500, "result":"查询speeddate异常(setep=4) ,message=" + error.message});
-    							});
-    				    	}
-	    				},
-	    				function(error){
-							response.error({"code":500, "result":"查询speeddate异常(setep=3) ,message=" + error.message});
-	    				});
-					}else{
-						response.error({"code":500, "result":"dynamicData不存在(setep=2), toUserId=" + toUserId});
-					}
-			    },
-			    function(error){
-			    	response.error({"code":500, "result":"查询userDynamic异常(setep=2), toUserId=" + toUserId + " ,message=" + error.message});
-			    });
+		    				    		//存在记录，则修改状态
+		    				    		results[0].set('status', 2);
+		    				    		results[0].save();
+		    				    		fromUserDynamic.set('datingStatus',2);
+		    				    		fromUserDynamic.save();
+		    				    		toUserDynamic.set("datingStatus", 2);
+		    				    		toUserDynamic.save();
+		    				    		response.success({"code":200, "results":results[0]});
+		    				    	}else{
+		    				    		//避免重复创建记录，先查询是否已经有喜欢对方的记录存在
+		    				    		speedDatingQuery = new AV.Query(SpeedDate);
+		    				    		speedDatingQuery.equalTo('fromUser',fromUserId);
+		    							speedDatingQuery.equalTo('toUser',toUserId);
+		    							speedDatingQuery.containedIn('status',[1,2,3,4]);
+		    							speedDatingQuery.equalTo('isValid',true);
+		    							speedDatingQuery.find().then(function(results){
+											if(results.length > 0){
+											    //返回当前记录
+												response.success({"code":200, "results":results[0]});
+											}else{
+											    //不存在，则创建记录
+									    		var speedDate = new SpeedDate();
+									    		speedDate.set('fromUser',fromUserId);
+									    		speedDate.set('toUser',toUserId);
+									    		speedDate.set('fromUserEvaStatus',false);
+									    		speedDate.set('toUserEvaStatus',false);
+									    		speedDate.set('status',1);
+									    		speedDate.set('isValid', true);
+									    		speedDate.save().then(function(speedDate){
+									    			response.success({"code":200, "results":speedDate});
+									    		},
+									    		function(error){
+													response.error({"code":500, "result":"创建speeddate异常(setep=5) ,message=" + error.message});
+									    		});
+											}
+		    							},
+		    							function(error){
+		    								response.error({"code":500, "result":"查询speeddate异常(setep=4) ,message=" + error.message});
+		    							});
+		    				    	}
+			    				},
+			    				function(error){
+									response.error({"code":500, "result":"查询speeddate异常(setep=3) ,message=" + error.message});
+			    				});
+							}
+						}else{
+							response.error({"code":500, "result":"dynamicData不存在(setep=2), toUserId=" + toUserId});
+						}
+				    },
+				    function(error){
+				    	response.error({"code":500, "result":"查询userDynamic异常(setep=2), toUserId=" + toUserId + " ,message=" + error.message});
+				    });
+				}
 			}else{
 				response.error({"code":500, "result":"dynamicData不存在(setep=1), fromUserId=" + fromUserId});
 			}
