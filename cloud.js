@@ -276,7 +276,7 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 							//查询对方是否已经存在走走中
 							if(toUserDynamic.get('datingStatus')>1 && toUserDynamic.get('datingStatus')<5){
 								//用户当前还处于走走中
-								return response.success({"code":500, "results":toUserDynamic});
+								return response.success({"code":500, "results":"he/she is in dating."});
 							}else{
 								var speedDatingQuery = new AV.Query(SpeedDate);
 			    				speedDatingQuery.equalTo('fromUser',toUserId);
