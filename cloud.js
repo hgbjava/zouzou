@@ -266,7 +266,7 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 				var fromUserDynamic = results[0];
 				if(fromUserDynamic.get('datingStatus')>1 || fromUserDynamic.get('datingStatus')<5){
 					//当前用户还处于走走中
-					return response.success({"code":500, "results":"can't like other more."});
+					return response.success({"code":500, "results":fromUserDynamic});
 				}else{
 					user.id = toUserId;
 				    userDynamicQuery.equalTo('userId',user);
@@ -274,9 +274,9 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 						if(results.length > 0){
 							var toUserDynamic = results[0];
 							//查询对方是否已经存在走走中
-							if(fromUserDynamic.get('datingStatus')>1 || fromUserDynamic.get('datingStatus')<5){
+							if(toUserDynamic.get('datingStatus')>1 || toUserDynamic.get('datingStatus')<5){
 								//用户当前还处于走走中
-								return response.success({"code":500, "results":"he/she is in dating."});
+								return response.success({"code":500, "results":toUserDynamic});
 							}else{
 								var speedDatingQuery = new AV.Query(SpeedDate);
 			    				speedDatingQuery.equalTo('fromUser',toUserId);
