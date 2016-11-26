@@ -414,6 +414,71 @@ AV.Cloud.define('goTogether', function(request, response) {
 
 /**
  * 结束走走接口
+ * param example: {"speedDateId":"583449c8d20309006168ba00"}
+ */
+AV.Cloud.define('cancelSpeedDate', function(request, response) {
+	var speedDateId = request.params.speedDateId;
+	if(!speedDateId || speedDateId === ''){
+		response.error({"code":500, "result":"参数不正确, speedDateId=" + speedDateId});
+	}else{
+		var speedDate = null;
+		var speedDateQuery = new AV.Query(SpeedDate);
+		speedDateQuery.get(speedDateId).then(function(speedDate){
+			if(speedDate){
+				speedDate.set('isValid', false);
+				speedDate.save();
+				//修改from用户状态
+				var user = new User();
+				user.id=speedDate.get('fromUser');
+				var userDynamicQuery  = new AV.Query(UserDynamicData);
+				userDynamicQuery.equalTo('userId', user);
+				userDynamicQuery.find().then(function(results){
+					if(results.length >0){
+						results[0].set('datingStatus', 1);
+						results[0].save().then(function(userDynamicData){
+							//修改to用户状态
+							user.id=speedDate.get('toUser');
+							userDynamicQuery.equalTo('userId', user);
+					        userDynamicQuery.find().then(function(results){
+					        	if(results.length >0){
+	    							results[0].set('datingStatus', 1);
+	    							results[0].save().then(function(userDynamicData){
+	    								//返回当前快约记录
+	    								response.success({"code":200, "results": speedDate});
+	    							},
+	    							function(error){
+	    								response.error({"code":500, "result":"更新dynamicData异常(setep=5), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
+	    							});
+	    						}else{
+	    							response.error({"code":500, "result":"dynamicData不存在(setep=4), toUser=" + speedDate.get('toUser')});
+	    						}
+					        },
+					        function(error){
+					        	response.error({"code":500, "result":"查询dynamicDate异常(setep=4), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
+					        });
+						},
+						function(error){
+							response.error({"code":500, "result":"更新dynamicData异常(setep=3), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
+						});
+					}else{
+						response.error({"code":500, "result":"dynamicData不存在(setep=2), fromUser=" + speedDate.get('fromUser')});
+					}
+				},
+				function(error){
+					response.error({"code":500, "result":"查询dynamicDate异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
+				});
+			}else{
+				response.error({"code":500, "result":"speedDate不存在(setep=1), speedDateId=" + speedDateId});
+			}
+		},
+		function(error){
+			response.error({"code":500, "result":"查询speedDate异常(setep=1), speedDateId=" + speedDateId + " ,message=" + error.message});
+		});
+	}
+});
+
+/**
+ * 结束走走接口
  * param example: {"speedDateId":"569a01c400b00ef385062359"}
  */
 AV.Cloud.define('endSpeedDate', function(request, response) {
