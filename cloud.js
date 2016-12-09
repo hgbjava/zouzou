@@ -141,11 +141,13 @@ AV.Cloud.define('addFriend', function(request, response) {
  		var fromUserQuery = new AV.Query(SpeedDate);
  		fromUserQuery.equalTo('fromUser',userId);
 		fromUserQuery.containedIn('status',[2,3,4]);
+		fromUserQuery.equalTo('fromUserEvaStatus',false);
 		fromUserQuery.equalTo('isValid',true);
 
 		var toUserQuery = new AV.Query(SpeedDate);
  		toUserQuery.equalTo('toUser',userId);
 		toUserQuery.containedIn('status',[2,3,4]);
+		toUserQuery.equalTo('toUserEvaStatus',false);
 		toUserQuery.equalTo('isValid',true);
 		var query = AV.Query.or(fromUserQuery, toUserQuery);
 		query.find().then(function(results){
