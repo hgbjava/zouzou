@@ -21,10 +21,9 @@ AV.Cloud.define('friendInActive', function(request, response){
 		friendQuery.equalTo('userId', userId);
 		friendQuery.equalTo('friendUserId', friendUserId);
 		friendQuery.find().then(function(result){
-			return response.success({"code":200, "result":result});
-			if(result){
-				result.set('isActive',false);
-				result.save();
+			if(results.length > 1){
+				results[0].set('isActive',false);
+				results[0].save();
 			}
 			return response.success({"code":200, "result":friend});
 		},
