@@ -141,6 +141,7 @@ AV.Cloud.define('addFriend', function(request, response) {
 				friend.set('userId', userId);
 				friend.set('friendUserId', friendUserId);
 				friend.set('color', color);
+				friend.set('isActive', true);
 				friend.save().then(function(friend){
 					response.success({"code":200, "results":friend});
 				},
