@@ -8,6 +8,31 @@ var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
 var Friend = AV.Object.extend('Friend');
 
 /**
+ * 好友进入灰色区域
+ * 参数：{"speedDateId":"57ea26282e958a00545256e0","color":"2"}
+*/
+AV.Cloud.define('friendInActive', function(request, response){
+	var friendUserId = request.params.friendUserId;
+	var userId = request.params.userId;
+	if(!friendUserId || friendUserId==='' || !userId || userId===''){
+		response.error({"code":500, "result":"参数不能为空"});
+	}else{
+		var friendQuery = new AV.Query(Friend);
+		friendQuery.equalTo('userId', userId);
+		friendQuery.equalTo('', friendUserId);
+		userDynamicQuery.find().then(function(friend){
+			if(friend){
+				friend.set('isActive',false);
+				friend.save();
+			}
+			return response.success({"code":200, "result":friend});
+		},
+		function(error){
+			response.error({"code":500, "result":"不存在好友记录,userId=" + userId + ",friendUserId=" + friendUserId});
+		});
+	}
+});
+/**
  * 设置当前走走记录color
  * 参数：{"speedDateId":"57ea26282e958a00545256e0","color":"2"}
 */
@@ -74,6 +99,7 @@ AV.Cloud.define('userCoordinate', function(request, response) {
 		var friendQuery = new AV.Query(Friend);
 		friendQuery.equalTo('userId', userId);
 		friendQuery.descending('updatedAt');
+		friendQuery.equalTo('isActive', true);
 		friendQuery.limit(count);
 		friendQuery.find().then(function(results){
 			return response.success({"code":200, "results":results});
