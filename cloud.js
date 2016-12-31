@@ -19,7 +19,7 @@ AV.Cloud.define('friendInActive', function(request, response){
 	}else{
 		var friendQuery = new AV.Query(Friend);
 		friendQuery.equalTo('userId', userId);
-		friendQuery.equalTo('', friendUserId);
+		friendQuery.equalTo('friendUserId', friendUserId);
 		friendQuery.find().then(function(friend){
 			if(friend){
 				friend.set('isActive',false);
