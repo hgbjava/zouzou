@@ -20,12 +20,12 @@ AV.Cloud.define('friendInActive', function(request, response){
 		var friendQuery = new AV.Query(Friend);
 		friendQuery.equalTo('userId', userId);
 		friendQuery.equalTo('friendUserId', friendUserId);
-		friendQuery.find().then(function(result){
+		friendQuery.find().then(function(results){
 			if(results.length > 1){
 				results[0].set('isActive',false);
 				results[0].save();
 			}
-			return response.success({"code":200, "result":friend});
+			return response.success({"code":200, "result":results[0]});
 		},
 		function(error){
 			response.error({"code":500, "result":"不存在好友记录,userId=" + userId + ",friendUserId=" + friendUserId});
