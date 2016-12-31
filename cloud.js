@@ -101,7 +101,6 @@ AV.Cloud.define('userCoordinate', function(request, response) {
 		friendQuery.equalTo('isActive',true);
 		friendQuery.descending('updatedAt');
 		friendQuery.limit(count);
-		return response.success({"code":200, "results":friendQuery});
 		friendQuery.find().then(function(results){
 			return response.success({"code":200, "results":results});
 		},
