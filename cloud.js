@@ -7,10 +7,6 @@ var UserScore = AV.Object.extend('UserScore');
 var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
 var Friend = AV.Object.extend('Friend');
 
-AV.Cloud.define('create', function(request, response){
-
-});
-
 /**
  * 好友进入灰色区域
  * 参数：{"speedDateId":"57ea26282e958a00545256e0","color":"2"}
@@ -262,17 +258,20 @@ AV.Cloud.define('updateUserDynamicData', function(request, response) {
  * param: {"userDynamicDataId":"567e966e00b0adf744f09b09"}
  */
 AV.Cloud.define('queryUserDynamicData', function(request, response) {
-	var userDynamicDataId = request.params.userDynamicDataId;
-	if(!userDynamicDataId || userDynamicDataId === ''){
-		response.error({"code":500, "result":"参数userDynamicDataId不为空"});
+	var userId = request.params.userId;
+	if(!userId || userId === ''){
+		response.error({"code":500, "result":"userId"});
 	}else{
+		var user = new User();
+		user.id = userId;
 		var userDynamicQuery  = new AV.Query(UserDynamicData);
-		userDynamicQuery.get(userDynamicDataId).then(function(userDynamicData) {
-			if(userDynamicData){
-				response.success({'code':200,'result': userDynamicData});
+		userDynamicQuery.equalTo('userId',user);
+		userDynamicQuery.find().then(function(results){
+			if(results.length > 0){
+				response.success({'code':200,'result': results[0]});
 			}
 		}, function(error) {
-		  	response.error({"code":500, "result":"查询dynamicData异常(step=1), userDynamicDataId=" + userDynamicDataId + ", errormsg:" + error.message});
+		  	response.error({"code":500, "result":"查询dynamicData异常,userId=" + userId});
 		});
 	}
 });
