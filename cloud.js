@@ -201,7 +201,7 @@ AV.Cloud.define('createUserDynamicData', function(request, response) {
 			var datingStatus = request.params.datingStatus;
 			var onlineStatus = request.params.onlineStatus;
 			if(results.length > 0){
-				results[0].save();
+				//已经存在则返回原有记录
 				response.success({"code":200, "result":results[0]});
 			}else{
 				var userDynamicData = new UserDynamicData();
@@ -260,7 +260,7 @@ AV.Cloud.define('updateUserDynamicData', function(request, response) {
 AV.Cloud.define('queryUserDynamicData', function(request, response) {
 	var userId = request.params.userId;
 	if(!userId || userId === ''){
-		response.error({"code":500, "result":"userId"});
+		response.error({"code":500, "result":"参数userId不为空"});
 	}else{
 		var user = new User();
 		user.id = userId;
