@@ -7,6 +7,10 @@ var UserScore = AV.Object.extend('UserScore');
 var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
 var Friend = AV.Object.extend('Friend');
 
+AV.Cloud.define('create', function(request, response){
+
+});
+
 /**
  * 好友进入灰色区域
  * 参数：{"speedDateId":"57ea26282e958a00545256e0","color":"2"}
@@ -160,19 +164,19 @@ AV.Cloud.define('addFriend', function(request, response) {
  * 查询用户动态数据
  * param: {"userId":"573050921532bc0065092c58"}
  */
- AV.Cloud.define('querySpeedDate', function(request, response) {
- 	var userId = request.params.userId;
- 	if(!userId || userId === ''){
- 		response.error({"code":500, "result":"参数userId不能为空"});
- 	}else{
- 		var fromUserQuery = new AV.Query(SpeedDate);
- 		fromUserQuery.equalTo('fromUser',userId);
+AV.Cloud.define('querySpeedDate', function(request, response) {
+	var userId = request.params.userId;
+	if(!userId || userId === ''){
+		response.error({"code":500, "result":"参数userId不能为空"});
+	}else{
+		var fromUserQuery = new AV.Query(SpeedDate);
+		fromUserQuery.equalTo('fromUser',userId);
 		fromUserQuery.containedIn('status',[2,3,4]);
 		fromUserQuery.equalTo('fromUserEvaStatus',false);
 		fromUserQuery.equalTo('isValid',true);
 
 		var toUserQuery = new AV.Query(SpeedDate);
- 		toUserQuery.equalTo('toUser',userId);
+		toUserQuery.equalTo('toUser',userId);
 		toUserQuery.containedIn('status',[2,3,4]);
 		toUserQuery.equalTo('toUserEvaStatus',false);
 		toUserQuery.equalTo('isValid',true);
@@ -183,8 +187,75 @@ AV.Cloud.define('addFriend', function(request, response) {
 		function(error){
 			response.error({"code":500, "result":"查询用户邀约记录异常(step=1), errormsg:" + error.message});
 		});
- 	}
- });
+	}
+});
+
+AV.Cloud.define('createUserDynamicData', function(request, response) {
+	var userId = request.params.userId;
+	if(!userId || userId === ''){
+		response.error({"code":500, "result":"参数userId不为空"});
+	}else{
+		var user = new User();
+		user.id = userId;
+		var userDynamicQuery  = new AV.Query(UserDynamicData);
+		userDynamicQuery.equalTo('userId',user);
+		userDynamicQuery.find().then(function(results){
+			var latitude = request.params.latitude;
+			var longitude = request.params.longitude;
+			var datingStatus = request.params.datingStatus;
+			var onlineStatus = request.params.onlineStatus;
+			if(results.length > 0){
+				results[0].save();
+				response.success({"code":200, "result":results[0]});
+			}else{
+				var userDynamicData = new UserDynamicData();
+				userDynamicData.set('userId', user);
+				userDynamicData.set('datingStatus', 1);
+				userDynamicData.set('onlineStatus', true);
+				userDynamicData.save().then(function(userDynamicData){
+					response.success({"code":200, "result":userDynamicData})
+				},
+				function(error){
+					response.error({"code":500, "result":"保存用户DynamicData异常"});
+				});
+			}
+		},
+		function(error){
+			response.error({"code":500, "result":"查询用户DynamicData异常，userId=" + userId});
+		});
+	}
+});
+
+
+AV.Cloud.define('updateUserDynamicData', function(request, response) {
+	var userId = request.params.userId;
+	if(!userId || userId === ''){
+		response.error({"code":500, "result":"参数userId不为空"});
+	}else{
+		var userDynamicQuery  = new AV.Query(UserDynamicData);
+		var user = new User();
+		user.id = userId;
+		userDynamicQuery.equalTo('userId',user);
+		userDynamicQuery.find().then(function(results){
+			if(results.length > 0){
+				var latitude = request.params.latitude;
+				var longitude = request.params.longitude;
+				var datingStatus = request.params.datingStatus;
+				if(latitude && latitude != '' && longitude && longitude != ''){
+					var location = new AV.GeoPoint({"latitude": latitude, "longitude": longitude});
+					results[0].set('location',location);
+				}
+				if(datingStatus && datingStatus != ''){
+					results[0].set('datingStatus',datingStatus);
+				}
+				results[0].save();
+				response.success({"code":200, "result":results[0]});
+			}
+		},function(error){
+			response.error({"code":500, "result":"查询用户DynamicData异常，userId=" + userId});
+		});
+	}
+});
 
 /**
  * 查询用户动态数据
