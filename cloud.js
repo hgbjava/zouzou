@@ -236,14 +236,11 @@ AV.Cloud.define('updateUserDynamicData', function(request, response) {
 			if(results.length > 0){
 				var latitude = request.params.latitude;
 				var longitude = request.params.longitude;
-				var datingStatus = request.params.datingStatus;
 				if(latitude && latitude != '' && longitude && longitude != ''){
 					var location = new AV.GeoPoint({"latitude": latitude, "longitude": longitude});
 					results[0].set('location',location);
 				}
-				if(datingStatus && datingStatus != ''){
-					results[0].set('datingStatus',datingStatus);
-				}
+				
 				results[0].save();
 				response.success({"code":200, "result":results[0]});
 			}
