@@ -243,6 +243,8 @@ AV.Cloud.define('updateUserDynamicData', function(request, response) {
 				
 				results[0].save();
 				response.success({"code":200, "result":results[0]});
+			}else{
+				response.error({"code":500, "result":"用户DynamicData不存在, userId=" + userId});
 			}
 		},function(error){
 			response.error({"code":500, "result":"查询用户DynamicData异常，userId=" + userId});
