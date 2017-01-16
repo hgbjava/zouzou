@@ -269,6 +269,8 @@ AV.Cloud.define('queryUserDynamicData', function(request, response) {
 		userDynamicQuery.find().then(function(results){
 			if(results.length > 0){
 				response.success({'code':200,'result': results[0]});
+			}else{
+				response.success({'code':200,'result': null});
 			}
 		}, function(error) {
 		  	response.error({"code":500, "result":"查询dynamicData异常,userId=" + userId});
