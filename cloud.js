@@ -590,48 +590,53 @@ AV.Cloud.define('endSpeedDate', function(request, response) {
 		var speedDateQuery = new AV.Query(SpeedDate);
 		speedDateQuery.get(speedDateId).then(function(speedDate){
 			if(speedDate){
-				speedDate.set('status', 4);
-				speedDate.save();
-				//修改from用户状态
-				var user = new User();
-				user.id=speedDate.get('fromUser');
-				var userDynamicQuery  = new AV.Query(UserDynamicData);
-				userDynamicQuery.equalTo('userId', user);
-				userDynamicQuery.find().then(function(results){
-					if(results.length >0){
-						results[0].set('datingStatus', 4);
-						results[0].save().then(function(userDynamicData){
-							//修改to用户状态
-							user.id=speedDate.get('toUser');
-							userDynamicQuery.equalTo('userId', user);
-					        userDynamicQuery.find().then(function(results){
-					        	if(results.length >0){
-	    							results[0].set('datingStatus', 4);
-	    							results[0].save().then(function(userDynamicData){
-	    								//返回当前快约记录
-	    								response.success({"code":200, "results": speedDate});
-	    							},
-	    							function(error){
-	    								response.error({"code":500, "result":"更新dynamicData异常(setep=5), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
-	    							});
-	    						}else{
-	    							response.error({"code":500, "result":"dynamicData不存在(setep=4), toUser=" + speedDate.get('toUser')});
-	    						}
-					        },
-					        function(error){
-					        	response.error({"code":500, "result":"查询dynamicDate异常(setep=4), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
-					        });
-						},
-						function(error){
-							response.error({"code":500, "result":"更新dynamicData异常(setep=3), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
-						});
-					}else{
-						response.error({"code":500, "result":"dynamicData不存在(setep=2), fromUser=" + speedDate.get('fromUser')});
-					}
-				},
-				function(error){
-					response.error({"code":500, "result":"查询dynamicDate异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
-				});
+				//当前speeddate已经结束了
+				if(speedDate.get('status') == 4){
+					response.success({"code":200, "results": speedDate});
+				}else{
+					speedDate.set('status', 4);
+					speedDate.save();
+					//修改from用户状态
+					var user = new User();
+					user.id=speedDate.get('fromUser');
+					var userDynamicQuery  = new AV.Query(UserDynamicData);
+					userDynamicQuery.equalTo('userId', user);
+					userDynamicQuery.find().then(function(results){
+						if(results.length >0){
+							results[0].set('datingStatus', 4);
+							results[0].save().then(function(userDynamicData){
+								//修改to用户状态
+								user.id=speedDate.get('toUser');
+								userDynamicQuery.equalTo('userId', user);
+						        userDynamicQuery.find().then(function(results){
+						        	if(results.length >0){
+		    							results[0].set('datingStatus', 4);
+		    							results[0].save().then(function(userDynamicData){
+		    								//返回当前快约记录
+		    								response.success({"code":200, "results": speedDate});
+		    							},
+		    							function(error){
+		    								response.error({"code":500, "result":"更新dynamicData异常(setep=5), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
+		    							});
+		    						}else{
+		    							response.error({"code":500, "result":"dynamicData不存在(setep=4), toUser=" + speedDate.get('toUser')});
+		    						}
+						        },
+						        function(error){
+						        	response.error({"code":500, "result":"查询dynamicDate异常(setep=4), toUser=" + speedDate.get('toUser') + " ,message=" + error.message});
+						        });
+							},
+							function(error){
+								response.error({"code":500, "result":"更新dynamicData异常(setep=3), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
+							});
+						}else{
+							response.error({"code":500, "result":"dynamicData不存在(setep=2), fromUser=" + speedDate.get('fromUser')});
+						}
+					},
+					function(error){
+						response.error({"code":500, "result":"查询dynamicDate异常(setep=2), fromUser=" + speedDate.get('fromUser') + " ,message=" + error.message});
+					});
+				}
 			}else{
 				response.error({"code":500, "result":"speedDate不存在(setep=1), speedDateId=" + speedDateId});
 			}
