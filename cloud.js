@@ -241,6 +241,7 @@ AV.Cloud.define('updateUserDynamicData', function(request, response) {
 					results[0].set('location',location);
 				}
 				
+				results[0].set('onlineStatus', true);
 				results[0].save();
 				response.success({"code":200, "result":results[0]});
 			}else{
@@ -591,7 +592,7 @@ AV.Cloud.define('endSpeedDate', function(request, response) {
 		speedDateQuery.get(speedDateId).then(function(speedDate){
 			if(speedDate){
 				//当前speeddate已经结束了
-				if(speedDate.get('status') == 4){
+				if(speedDate.get('status') >= 4){
 					response.success({"code":200, "results": speedDate});
 				}else{
 					speedDate.set('status', 4);
