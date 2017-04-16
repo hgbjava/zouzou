@@ -186,6 +186,35 @@ AV.Cloud.define('querySpeedDate', function(request, response) {
 	}
 });
 
+AV.Cloud.define('registe', function(request, response) {
+	var username = request.params.username;
+	var password = request.params.password;
+	var email = request.params.email;
+	var phone = request.params.phone;
+	var userQuery = new AV.Query(User);
+	userQuery.equalTo('mobilePhoneNumber', phone);
+	userQuery.find().then(function(results){
+		if(results && results.length > 0){
+			response.error({"code":500, "result":"手机号码已经注册"})
+		}else{
+			var newuser = new AV.User();
+			newuser.setUsername(username);
+			newuser.setPassword(password);
+			newuser.setEmail(email);
+			newuser.setMobilePhoneNumber(phone);
+			newuser.signUp().then(function(loginedUser){
+				response.success({"code":200, "result":loginedUser});
+			},
+			function(error){
+				response.error({"code":500, "result":"注册失败"});
+			});
+		}
+	},
+	function(error){
+		response.error({"code":500, "result":"服务异常"});
+	});
+});
+
 AV.Cloud.define('createUserDynamicData', function(request, response) {
 	var userId = request.params.userId;
 	if(!userId || userId === ''){
