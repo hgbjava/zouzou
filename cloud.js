@@ -197,11 +197,12 @@ AV.Cloud.define('registe', function(request, response) {
 		if(results.length > 0){
 			response.error({"code":500, "result":"手机号码已经注册"})
 		}else{
+			response({"code":200, "result":newuser});
 			var newuser = new AV.User();
 			newuser.setUsername(username);
 			newuser.setPassword(password);
 			newuser.setEmail(email);
-			response({"code":200, "result":newuser});
+			
 			newuser.signUp().then(function(loginedUser){
 				response.success({"code":200, "result":loginedUser});
 			},
