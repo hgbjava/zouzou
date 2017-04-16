@@ -201,7 +201,7 @@ AV.Cloud.define('registe', function(request, response) {
 			newuser.setUsername(username);
 			newuser.setPassword(password);
 			newuser.setEmail(email);
-			
+			response({"code":200, "result":newuser});
 			newuser.signUp().then(function(loginedUser){
 				response.success({"code":200, "result":loginedUser});
 			},
