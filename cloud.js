@@ -189,12 +189,12 @@ AV.Cloud.define('querySpeedDate', function(request, response) {
 AV.Cloud.define('registe', function(request, response) {
 	var username = request.params.username;
 	var password = request.params.password;
-	var email = request.params.email;
 	var phone = request.params.phone;
 	var gender = request.params.gender;
 	var userQuery = new AV.Query(User);
 	userQuery.equalTo('mobilePhoneNumber', phone);
 	userQuery.find().then(function(results){
+		response.error({"code":500, "result":results})
 		if(results.length > 0){
 			response.error({"code":500, "result":"手机号码已经注册"})
 		}else{
