@@ -191,6 +191,7 @@ AV.Cloud.define('registe', function(request, response) {
 	var password = request.params.password;
 	var email = request.params.email;
 	var phone = request.params.phone;
+	var gender = request.params.gender;
 	var userQuery = new AV.Query(User);
 	userQuery.equalTo('mobilePhoneNumber', phone);
 	userQuery.find().then(function(results){
@@ -199,10 +200,10 @@ AV.Cloud.define('registe', function(request, response) {
 		}else{
 			response({"code":200, "result":"test"});
 			var newuser = new AV.User();
-			newuser.setUsername(username);
-			newuser.setPassword(password);
-			newuser.setEmail(email);
-			
+			newuser.set('username', username);
+			newuser.set('password', password);
+			newuser.set('mobilePhoneNumber', phone);
+			newuser.set('gender', gender);
 			newuser.signUp().then(function(loginedUser){
 				response.success({"code":200, "result":loginedUser});
 			},
