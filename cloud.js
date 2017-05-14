@@ -195,7 +195,7 @@ AV.Cloud.define('updatePassword', function(request, response) {
 			var password = request.params.password;
 			results[0].set('password', password);
 			results[0].save().then(function(user){
-				response.success("result":"密码修改成功");
+				response.success({"result":"密码修改成功"});
 			}, 
 			function(error){
 				response.error({"code":500, "result":"服务端异常"});
