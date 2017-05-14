@@ -223,11 +223,9 @@ AV.Cloud.define('registe', function(request, response) {
 				response.error({"code":500, "result":"手机号码已经注册"});
 			}else{
 				results[0].destroy().then(function(success){
-				    // 删除成功
 				    response.success({"code":200});
 				}, 
 				function(error){
-				    // 删除失败
 				    response.error({"code":500, "message":"删除失败"});
 				});
 			}
