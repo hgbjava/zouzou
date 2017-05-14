@@ -207,7 +207,7 @@ AV.Cloud.define('updatePassword', function(request, response) {
 	function(error){
 		response.error({"code":500, "result":"服务端异常"});
 	});
-}）；
+});
 
 AV.Cloud.define('registe', function(request, response) {
 	var username = request.params.username;
