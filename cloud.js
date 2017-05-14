@@ -218,6 +218,7 @@ AV.Cloud.define('registe', function(request, response) {
 	userQuery.equalTo('mobilePhoneNumber', phone);
 	userQuery.find().then(function(results){
 		if(results.length > 0){
+			response.success({"result":results[0]});
 			if(results[0].get('mobilePhoneVerified')==true){
 				response.error({"code":500, "result":"手机号码已经注册"});
 			}else{
