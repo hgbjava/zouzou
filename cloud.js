@@ -186,6 +186,29 @@ AV.Cloud.define('querySpeedDate', function(request, response) {
 	}
 });
 
+AV.Cloud.define('updatePassword', function(request, response) {
+	var phone = request.params.phone;
+	var userQuery = new AV.Query(User);
+	userQuery.equalTo('mobilePhoneNumber', phone);
+	userQuery.find().then(function(results){
+		if(results.length > 0){
+			var password = request.params.password;
+			results[0].set('password', password);
+			results[0].save().then(function(user){
+				response.success("result":"密码修改成功");
+			}, 
+			function(error){
+				response.error({"code":500, "result":"服务端异常"});
+			});
+		}else{
+			response.error({"result":"用户不存在"});
+		}
+	},
+	function(error){
+		response.error({"code":500, "result":"服务端异常"});
+	});
+}）；
+
 AV.Cloud.define('registe', function(request, response) {
 	var username = request.params.username;
 	var password = request.params.password;
@@ -195,7 +218,18 @@ AV.Cloud.define('registe', function(request, response) {
 	userQuery.equalTo('mobilePhoneNumber', phone);
 	userQuery.find().then(function(results){
 		if(results.length > 0){
-			response.error({"code":500, "result":"手机号码已经注册"})
+			if(results[0].get('mobilePhoneVerified')==true){
+				response.error({"code":500, "result":"手机号码已经注册"});
+			}else{
+				results[0].destroy().then(function(success){
+				    // 删除成功
+				    response.success({"code":200});
+				}, 
+				function(error){
+				    // 删除失败
+				    response.error({"code":500, "message":"删除失败"});
+				});
+			}
 		}else{
 			var newuser = new AV.User();
 			newuser.set('username', username);
