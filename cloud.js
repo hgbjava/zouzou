@@ -6,7 +6,47 @@ var Evaluation = AV.Object.extend('Evaluation');
 var UserScore = AV.Object.extend('UserScore');
 var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
 var Friend = AV.Object.extend('Friend');
+var FeedbackType = AV.Object.extend('Feedback_type');
+var Feedback = AV.Object.extend('Feedback');
 
+/**
+ * 反馈列表
+*/
+AV.Cloud.define('feedbackTypeList', function(request, response){
+	var feedbackTypeQuery = new AV.Query(FeedbackType);
+	feedbackTypeQuery.find().then(function(results){
+		return response.success({"code":200, "results":results});
+	},
+	function(error){
+		return response.error({"code":500, "result":"查询异常."});
+	});
+});
+
+/**
+ * 新增反馈
+*/
+AV.Cloud.define('feedbackTypeList', function(request, response){
+	var userId = request.params.userId;
+	var type = request.params.type;
+	var mobilePhone = request.params.mobilePhone;
+	var img = request.params.imgfile;
+	var content = request.params.content;
+	var feedback = new Feedback();
+
+	var user = new User();
+	user.id = userId;
+	feedback.set('user', user);
+	feedback.set('type', type);
+	feedback.set('img', img);
+	feedback.set('content', content);
+
+	feedback.save().then(function(feedback){
+		response.success({"code":200, "result":"新增反馈成功"});
+	},
+	function(error){
+		response.error({"code":500,"result":"新增反馈失败"});
+	});
+};
 /**
  * 好友进入灰色区域
  * 参数：{"speedDateId":"57ea26282e958a00545256e0","color":"2"}
