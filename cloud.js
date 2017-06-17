@@ -51,7 +51,7 @@ AV.Cloud.define('addFeedback', function(request, response){
 /**
  * 编辑反馈
 */
-AV.Cloud.define('addFeedback', function(request, response){
+AV.Cloud.define('editFeedback', function(request, response){
 	var feedbackId = request.params.feedbackId;
 	var img = request.params.imgfile;
 	var content = request.params.content;
