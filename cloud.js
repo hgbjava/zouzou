@@ -47,6 +47,31 @@ AV.Cloud.define('addFeedback', function(request, response){
 		response.error({"code":500,"result":"新增反馈失败"});
 	});
 });
+
+/**
+ * 编辑反馈
+*/
+AV.Cloud.define('addFeedback', function(request, response){
+	var feedbackId = request.params.feedbackId;
+	var img = request.params.imgfile;
+	var content = request.params.content;
+
+	var feedbackQuery = new AV.Query(Feedback);
+	feedbackQuery.get(feedbackId).then(function(feedback){
+		feedback.set('content', content);
+		feedback.set("img", img);
+		feedback.save().then(function(feedback){
+			response.success({"code":200, "result":"编辑反馈成功"});
+		},
+		function(error){
+			response.error({"code":500, "result":"编辑反馈失败"});
+		});
+	},function(error){
+		response.error({"code":500, "result":"查询反馈记录异常"});
+	});
+});
+
+
 /**
  * 好友进入灰色区域
  * 参数：{"speedDateId":"57ea26282e958a00545256e0","color":"2"}
