@@ -46,7 +46,7 @@ AV.Cloud.define('feedbackTypeList', function(request, response){
 	function(error){
 		response.error({"code":500,"result":"新增反馈失败"});
 	});
-};
+});
 /**
  * 好友进入灰色区域
  * 参数：{"speedDateId":"57ea26282e958a00545256e0","color":"2"}
