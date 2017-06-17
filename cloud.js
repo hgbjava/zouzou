@@ -25,7 +25,7 @@ AV.Cloud.define('feedbackTypeList', function(request, response){
 /**
  * 新增反馈
 */
-AV.Cloud.define('feedbackTypeList', function(request, response){
+AV.Cloud.define('addFeedback', function(request, response){
 	var userId = request.params.userId;
 	var type = request.params.type;
 	var mobilePhone = request.params.mobilePhone;
