@@ -33,6 +33,7 @@ AV.Cloud.define('report', function(request, response){
 				var user = new User();
 				user.id = reportedUserId;
 				userDynamicQuery.equalTo('userId', user);
+				response.success(userDynamicQuery);
 				userDynamicQuery.find().then(function(results){
 					response.success("test test");
 					if(results.length > 0){
@@ -50,7 +51,7 @@ AV.Cloud.define('report', function(request, response){
 				},
 				function(error){
 					response.error({"code":500, result:"被举报人不存在"});
-				})
+				});
 			}
 
 			report.save();
@@ -58,7 +59,7 @@ AV.Cloud.define('report', function(request, response){
 		},
 		function(error){
 			response.error({"code":500, "result":"举报失败"});
-		})
+		});
 	}
 });
 
