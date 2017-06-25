@@ -28,12 +28,14 @@ AV.Cloud.define('report', function(request, response){
 		reportQuery.equalTo('reportedUserId', reportedUserId);
 		reportQuery.find().then(function(results){
 			if(results.length == 0){
+				response.success("test test");
 				//需要扣减分数
 				var userDynamicQuery = AV.Query(UserDynamicData);
 				var user = new User();
 				user.id = reportedUserId;
 				userDynamicQuery.equalTo('userId', user);
 				userDynamicQuery.find().then(function(results){
+					response.success("test test");
 					if(results.length > 0){
 						var userDynamicData = results[0];
 						var reportedScore = userDynamicData.get('reportedScore');
