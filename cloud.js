@@ -38,7 +38,7 @@ AV.Cloud.define('report', function(request, response){
 						var userDynamicData = results[0];
 						var reportedScore = userDynamicData.get('reportedScore');
 						if(reportedScore > 0){
-							reportedScore=reportedScore -1;
+							reportedScore=reportedScore -1*2;
 							userDynamicData.set('reportedScore', reportedScore);
 							userDynamicData.save();
 						}
