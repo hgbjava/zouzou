@@ -35,8 +35,6 @@ AV.Cloud.define('report', function(request, response){
 				userDynamicQuery.equalTo('userId', user);
 				userDynamicQuery.find().then(function(results){
 					if(results.length > 0){
-						response.success("test2");
-						
 						var userDynamicData = results[0];
 						var reportedScore = userDynamicData.get('reportedScore');
 						if(reportedScore > 0){
@@ -44,9 +42,10 @@ AV.Cloud.define('report', function(request, response){
 							userDynamicData.set('reportedScore', reportedScore);
 							userDynamicData.save();
 						}
-						return response.success({"code":200, "result":userDynamicData.get("location")});
+						report.save();
+						response.success({"code":200, "result":"举报成功"});
 					}else{
-						response.error({"code":500, "result":"dynamicData不存在(setep=2), userId=" + userId});
+						response.error({"code":500, "result":"dynamicData不存在"});
 					}
 				},
 				function(error){
