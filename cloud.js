@@ -8,9 +8,74 @@ var SpeedDateRoute = AV.Object.extend('SpeedDateRoute');
 var Friend = AV.Object.extend('Friend');
 var FeedbackType = AV.Object.extend('Feedback_type');
 var Feedback = AV.Object.extend('Feedback');
+var ReportType = AV.Object.extend('Report_Type');
+var Report = AV.Object.extend('Report');
+
+AV.Cloud.define('report', function(request, response){
+	var userId = request.params.userId;
+	var code = request.params.code;
+	var reportedUserId = request.params.reportedUserId;
+	if(!userId || userId==='' || !reportedUserId || reportedUserId==='' || !code || code === ''){
+		response.error({"code":500, "result":"参数不能为空"});
+	}else{
+		var report = new Report();
+		report.set('userId', userId);
+		report.set('reportedUserId', reportedUserId);
+		report.set('code', code);
+
+		var reportQuery = new AV.Query(Report);
+		reportQuery.equalTo('userId', userId);
+		reportQuery.equalTo('reportedUserId', reportedUserId);
+		reportQuery.find().then(function(results){
+			if(results.length === 0){
+				//需要扣减分数
+				var userDynamicQuery = AV.Query(UserDynamicData);
+				var user = new User();
+				user.id = reportedUserId;
+				userDynamicQuery.equalTo('userId', user);
+				userDynamicQuery.find().then(function(results){
+					if(results.length > 0){
+						var userDynamicData = results[0];
+						var reportedScore = userDynamicData.get('reportedScore');
+						if(reportedScore > 0){
+							reportedScore=reportedScore -1;
+							userDynamicData.set('reportedScore', reportedScore);
+							userDynamicData.save();
+						}
+						return response.success({"code":200, "result":userDynamicData.get("location")});
+					}else{
+						response.error({"code":500, "result":"dynamicData不存在(setep=2), userId=" + userId});
+					}
+				},
+				function(error){
+					response.error({"code":500, result:"被举报人不存在"});
+				})
+			}
+
+			report.save();
+			response.success({"code":200, "result":"举报成功"});
+		},
+		function(error){
+			response.error({"code":500, "result":"举报失败"});
+		})
+	}
+});
 
 /**
- * 反馈列表
+ * 投诉类型列表
+*/
+AV.Cloud.define('reportTypeList', function(request, response){
+	var reportTypeQuery = new AV.Query(ReportType);
+	reportTypeQuery.find().then(function(results){
+		return response.success({"code":200, "results":results});
+	},
+	function(error){
+		return response.error({"code":500, "result":"查询举报类型列表异常."});
+	});
+});
+
+/**
+ * 反馈类型列表
 */
 AV.Cloud.define('feedbackTypeList', function(request, response){
 	var feedbackTypeQuery = new AV.Query(FeedbackType);
@@ -18,7 +83,7 @@ AV.Cloud.define('feedbackTypeList', function(request, response){
 		return response.success({"code":200, "results":results});
 	},
 	function(error){
-		return response.error({"code":500, "result":"查询异常."});
+		return response.error({"code":500, "result":"查询反馈类型列表异常."});
 	});
 });
 
@@ -445,6 +510,7 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 				userListQuery.equalTo('onlineStatus',true);
 				userListQuery.limit(10);
 				userListQuery.include("userId");
+				userListQuery.descending('reportedScore');
 				userListQuery.find().then(function(results){
 					var userArray = [];
 				    var x=0;
