@@ -33,10 +33,8 @@ AV.Cloud.define('report', function(request, response){
 				var user = new User();
 				user.id = reportedUserId;
 
-				var userDynamicQuery = AV.Query(UserDynamicData);
+				var userDynamicQuery = new AV.Query(UserDynamicData);
 				userDynamicQuery.equalTo('userId', user);
-				
-				response.success(user);
 
 				userDynamicQuery.find().then(function(results){
 					response.success("test2");
