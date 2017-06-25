@@ -31,13 +31,12 @@ AV.Cloud.define('report', function(request, response){
 				//需要扣减分数
 				var user = new User();
 				user.id = reportedUserId;
-
 				var userDynamicQuery = new AV.Query(UserDynamicData);
 				userDynamicQuery.equalTo('userId', user);
-				
 				userDynamicQuery.find().then(function(results){
-					response.success("test2");
 					if(results.length > 0){
+						response.success("test2");
+						
 						var userDynamicData = results[0];
 						var reportedScore = userDynamicData.get('reportedScore');
 						if(reportedScore > 0){
@@ -53,10 +52,10 @@ AV.Cloud.define('report', function(request, response){
 				function(error){
 					response.error({"code":500, result:"被举报人不存在"});
 				});
+			}else{
+				report.save();
+				response.success({"code":200, "result":"举报成功"});
 			}
-
-			report.save();
-			response.success({"code":200, "result":"举报成功"});
 		},
 		function(error){
 			response.error({"code":500, "result":"举报失败"});
