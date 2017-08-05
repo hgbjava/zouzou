@@ -503,32 +503,52 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 		var userDynamicQuery  = new AV.Query(UserDynamicData);
 		userDynamicQuery.get(userDynamicDataId).then(function(userDynamicData){
 			if(userDynamicData){
-				var location = userDynamicData.get('location');
-				var userListQuery = new AV.Query(UserDynamicData);
-				userListQuery.near('location', location);
-				userListQuery.notContainedIn('datingStatus',[2,3,4]);
-				userListQuery.notContainedIn('objectId',[userDynamicData.id]);
-				userListQuery.equalTo('onlineStatus',true);
-				userListQuery.limit(10);
-				userListQuery.include("userId");
-				userListQuery.descending('reportedScore');
-				userListQuery.find().then(function(results){
-					var userArray = [];
-				    var x=0;
-				    for(var i=0;i<results.length;i++){
-				        var distance = location.kilometersTo(results[i].get("location"));
-				        if(results[i].get("userId")){
-    				        results[i]=results[i].get("userId");
-    				        results[i].add("distance",distance);
-    				        userArray[x]=results[i];
-    				        x=x+1;
-				        }
-				    }
-				    var finalResult = {'code':200,'results':userArray};
-					response.success(finalResult);
+				//查询用户好友列表，作为排除
+				var friendQuery = new AV.Query(Friend);
+				friendQuery.equalTo('userId', userDynamicData.get("userId").id);
+				friendQuery.equalTo('isActive',true);
+				friendQuery.descending('updatedAt');
+				friendQuery.limit(10);
+				friendQuery.find().then(function(results){
+					return response.success({"code":200, "results":results});
+					var friendArray = [];
+					for(var i=0; i<results.lenght;i++){
+						var user = new User();
+						user.id = results[i].get('friendUserId');
+						friendArray[i] = user;
+					}
+
+					var location = userDynamicData.get('location');
+					var userListQuery = new AV.Query(UserDynamicData);
+					userListQuery.near('location', location);
+					userListQuery.notContainedIn('datingStatus',[2,3,4]);
+					userListQuery.notContainedIn('objectId',[userDynamicData.id]);
+					userListQuery.notContainedIn('userId', friendArray);
+					userListQuery.equalTo('onlineStatus',true);
+					userListQuery.limit(10);
+					userListQuery.include("userId");
+					userListQuery.descending('reportedScore');
+					userListQuery.find().then(function(results){
+						var userArray = [];
+					    var x=0;
+					    for(var i=0;i<results.length;i++){
+					        var distance = location.kilometersTo(results[i].get("location"));
+					        if(results[i].get("userId")){
+	    				        results[i]=results[i].get("userId");
+	    				        results[i].add("distance",distance);
+	    				        userArray[x]=results[i];
+	    				        x=x+1;
+					        }
+					    }
+					    var finalResult = {'code':200,'results':userArray};
+						response.success(finalResult);
+					},
+					function(error){
+						response.error({"code":500, "result":"查询用户列表(step=2), errormsg:" + error.message});
+					});
 				},
 				function(error){
-					response.error({"code":500, "result":"查询用户列表(step=2), errormsg:" + error.message});
+					response.error({"code":500, "result":"查询好友列表异常, userId=" + userId + ", errormsg:" + error.message});
 				});
 			}else{
 				response.error({"code":500, "result":"dynamicData不存在(setep=1), userId=" + userDynamicDataId});
