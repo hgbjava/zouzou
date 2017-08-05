@@ -517,6 +517,8 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 						friendArray[i] = user;
 					}
 
+					response.success(friendArray);
+					
 					var location = userDynamicData.get('location');
 					var userListQuery = new AV.Query(UserDynamicData);
 					userListQuery.near('location', location);
