@@ -522,7 +522,7 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 					userListQuery.near('location', location);
 					userListQuery.notContainedIn('datingStatus',[2,3,4]);
 					userListQuery.notContainedIn('objectId',[userDynamicData.id]);
-					userListQuery.notContainedIn('userId', friendArray);
+					//userListQuery.notContainedIn('userId', friendArray);
 					userListQuery.equalTo('onlineStatus',true);
 					userListQuery.limit(10);
 					userListQuery.include("userId");
