@@ -532,6 +532,7 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 					userListQuery.include("userId");
 					userListQuery.descending('reportedScore');
 					userListQuery.find().then(function(results){
+						response.success({'results':results});
 						var userArray = [];
 					    var x=0;
 					    for(var i=0;i<results.length;i++){
