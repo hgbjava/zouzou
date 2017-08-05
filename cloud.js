@@ -519,14 +519,14 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 						y=y+1;
 					}
 
-					response.success({'results':friendArray});
+					//response.success({'results':friendArray});
 
 					var location = userDynamicData.get('location');
 					var userListQuery = new AV.Query(UserDynamicData);
 					userListQuery.near('location', location);
 					userListQuery.notContainedIn('datingStatus',[2,3,4]);
 					userListQuery.notContainedIn('objectId',[userDynamicData.id]);
-					//userListQuery.notContainedIn('userId', friendArray);
+					userListQuery.notContainedIn('userId', friendArray);
 					userListQuery.equalTo('onlineStatus',true);
 					userListQuery.limit(10);
 					userListQuery.include("userId");
