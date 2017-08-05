@@ -512,6 +512,7 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 				friendQuery.find().then(function(results){
 					var friendArray = [];
 					var y=0;
+					response.success({'results':results});
 					for(var i=0; i<results.lenght;i++){
 						var user = new User();
 						user.id = results[i].get('friendUserId');
