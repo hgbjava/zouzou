@@ -510,7 +510,6 @@ AV.Cloud.define('queryNearlyUsers', function(request, response) {
 				friendQuery.descending('updatedAt');
 				//friendQuery.limit(10);
 				friendQuery.find().then(function(results){
-					return response.success({"code":200, "results":results});
 					var friendArray = [];
 					for(var i=0; i<results.lenght;i++){
 						var user = new User();
