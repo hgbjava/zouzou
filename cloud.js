@@ -867,6 +867,130 @@ AV.Cloud.define('endSpeedDate', function(request, response) {
 
 /**
  * 相互评价
+ * param: {"userId":"567e95ec60b2e1871e04a8ae","toUserId":"591ff23a570c3500699cd0f6","honesty":4,"talkative":4,"temperament":4,"seductive":4}
+ */
+AV.Cloud.define('evaluationEach2', function(request, response) {
+	var userId = request.params.userId;
+	var toUserId = request.params.toUserId;
+	var honesty = request.params.honesty;
+	var talkative = request.params.talkative;
+	var temperament = request.params.temperament;
+	var seductive = request.params.seductive;
+	if(!userId || userId === '' || !toUserId || toUserId==='' || !honesty || honesty <0 || honesty > 5 
+		|| !temperament || temperament <0 || temperament >5 || !talkative || talkative <0 || talkative >5 || !seductive || seductive < 0 || seductive > 5){
+		response.error({"code":500, "result":"参数不正确，userId=" + userId + ",toUserId=" + toUserId + ",honesty=" + honesty + ",temperament=" + temperament + 
+			",talkative=" + talkative + ",seductive=" + seductive});
+	}else{
+		var user = new User();
+		user.id = userId;
+		var evaluatedUser = new User();
+		evaluatedUser.id = toUserId;
+		//新增评价和修改用户状态
+		var evaluation = new Evaluation();
+		evaluation.set('evaluateUser',user);
+		evaluation.set('evaluatedUser', evaluatedUser);
+		//evaluation.set('speedDate',speedDate);
+		evaluation.set('honesty',honesty);
+		evaluation.set('temperament',temperament);
+		evaluation.set('talkative',talkative);
+		evaluation.set('seductive',seductive);
+		evaluation.save().then(function(evaluation){
+			//更新用户评价分数
+				var userScoreQuery = new AV.Query(UserScore);
+				userScoreQuery.equalTo('user', evaluatedUser.id);
+				userScoreQuery.find().then(function(results){
+					var userScore = null;
+					if(results.length > 0){
+						//计算评价分
+						userScore = results[0];
+						userScore.set('count', userScore.get('count') + 1);
+						userScore.set('totalHonesty', userScore.get('totalHonesty') + honesty);
+						userScore.set('totalTalkative', userScore.get('totalTalkative') + talkative);
+						userScore.set('totalTemperament', userScore.get('totalTemperament') + temperament);
+						userScore.set('totalSeductive', userScore.get('totalSeductive') + seductive);
+						userScore.set('honesty', userScore.get('totalHonesty')/userScore.get('count'));
+						userScore.set('talkative', userScore.get('totalTalkative')/userScore.get('count'));
+						userScore.set('temperament', userScore.get('totalTemperament')/userScore.get('count'));
+						userScore.set('seductive', userScore.get('totalSeductive')/userScore.get('count'));
+						var score = userScore.get('honesty') * 0.35 + userScore.get('talkative') * 0.30 + userScore.get('temperament') * 0.20 + userScore.get('seductive') * 0.15;
+						userScore.set('score', score);
+						userScore.save(null,{
+							fetchWhenSave:true
+						}).then(function(userScore){
+							//更新状态
+			    	    	var userDynamicQuery  = new AV.Query(UserDynamicData);
+	        				userDynamicQuery.equalTo('userId', user);
+	        				userDynamicQuery.find().then(function(results){
+	        					if(results.length > 0){
+	    							results[0].set('datingStatus', 1);
+									results[0].save().then(function(userDynamicData){
+										response.success({"code":200, "results":"success"});
+									},
+									function(error){
+										response.error({"code":500, "result":"更新用户状态异常(setep=7), userDynamicDataId=" + userDynamicData.id + " ,message=" + error.message});
+									});
+	    						}else{
+	    							response.error({"code":500, "result":"UserDynamicData不存在(setep=6), userId=" + user.id});
+	    						}
+	        				},
+	        				function(error){
+	        					response.error({"code":500, "result":"查询用户DynamicData异常(setep=6), userId=" + user.id + " ,message=" + error.message});
+	        				});
+						},
+						function(error){
+							response.error({"code":500, "result":"保存用户评分异常(setep=5), userScoreId=" + userScore.id + " ,message=" + error.message});
+						});
+					}else{
+						userScore = new UserScore();
+						userScore.set('user',evaluatedUser.id);
+						userScore.set('honesty',honesty);
+						userScore.set('talkative',talkative);
+						userScore.set('temperament',temperament);
+						userScore.set('seductive',seductive);
+						userScore.set('count',1);
+						userScore.set('totalHonesty',honesty);
+						userScore.set('totalTalkative',talkative);
+						userScore.set('totalTemperament',temperament);
+						userScore.set('totalSeductive',seductive);
+						userScore.set('score',honesty * 0.35 + talkative * 0.30 + temperament * 0.20 + seductive * 0.15);
+						userScore.save().then(function(userScore){
+							//更新状态
+			    	    	var userDynamicQuery  = new AV.Query(UserDynamicData);
+	        				userDynamicQuery.equalTo('userId', user);
+	        				userDynamicQuery.find().then(function(results){
+	        					if(results.length > 0){
+        							results[0].set('datingStatus', 1);
+									results[0].save().then(function(userDynamicData){
+										response.success({"code":200,"results":"success"});
+									},
+									function(error){
+										response.error({"code":500, "result":"更新用户状态异常(setep=11), userDynamicDataId=" + userDynamicData.id + " ,message=" + error.message});
+									});
+        						}else{
+        							response.error({"code":500, "result":"UserDynamicData不存在(setep=10), userId=" + user.id});
+        						}
+	        				},
+	        				function(error){
+	        					response.error({"code":500, "result":"查询用户DynamicData异常(setep=9), userId=" + user.id + " ,message=" + error.message});
+	        				});
+						},
+						function(error){
+							response.error({"code":500, "result":"保存用户评分异常(setep=8), userScoreId=" + userScore.id + " ,message=" + error.message});
+						});
+					}
+				},
+				function(error){
+					response.error({"code":500, "result":"查询用户评分异常(setep=4), evaluatedUserId=" + evaluatedUserId + " ,message=" + error.message});
+				});
+		},
+		function(error){
+			response.error({"code":500, "result":"新增评价异常(setep=2) ,message=" + error.message});
+		});
+	}
+});
+
+/**
+ * 相互评价
  * param: {"userId":"567e95ec60b2e1871e04a8ae","honesty":4,"talkative":4,"temperament":4,"seductive":4,"speedDateId":"569a01c400b00ef385062359"}
  */
 AV.Cloud.define('evaluationEach', function(request, response) {
