@@ -260,6 +260,7 @@ AV.Cloud.define('addFriend', function(request, response) {
 				/*存在好友记录，修改时间*/
 				friend = results[0];
 				friend.set('color', color);
+				friend.set('isActive', true);
 				friend.save().then(function(friend){
 					response.success({"code":200, "results":friend});
 				},
