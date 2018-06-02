@@ -318,6 +318,10 @@ AV.Cloud.define('querySpeedDate', function(request, response) {
 	}
 });
 
+/**
+ * 更新用户密码
+ * param: {"phone":"13395819983","password":"xxxxx}
+ */
 AV.Cloud.define('updatePassword', function(request, response) {
 	var phone = request.params.phone;
 	var userQuery = new AV.Query(User);
@@ -327,7 +331,7 @@ AV.Cloud.define('updatePassword', function(request, response) {
 			var password = request.params.password;
 			results[0].set('password', password);
 			results[0].save().then(function(user){
-				response.success({"result":"密码修改成功"});
+				response.success({"code":200,"result":"密码修改成功"});
 			}, 
 			function(error){
 				response.error({"code":500, "result":"服务端异常"});
@@ -341,6 +345,10 @@ AV.Cloud.define('updatePassword', function(request, response) {
 	});
 });
 
+/**
+ * 用户注册
+ * param: {"username":"xxx","password":"xxxx","phone":"13395819983","gender":"x"}
+ */
 AV.Cloud.define('registe', function(request, response) {
 	var username = request.params.username;
 	var password = request.params.password;
@@ -379,6 +387,10 @@ AV.Cloud.define('registe', function(request, response) {
 	});
 });
 
+/**
+ * 用户注册
+ * param: {"userId":"xxx"}
+ */
 AV.Cloud.define('createUserDynamicData', function(request, response) {
 	var userId = request.params.userId;
 	if(!userId || userId === ''){
@@ -389,12 +401,8 @@ AV.Cloud.define('createUserDynamicData', function(request, response) {
 		var userDynamicQuery  = new AV.Query(UserDynamicData);
 		userDynamicQuery.equalTo('userId',user);
 		userDynamicQuery.find().then(function(results){
-			var latitude = request.params.latitude;
-			var longitude = request.params.longitude;
-			var datingStatus = request.params.datingStatus;
-			var onlineStatus = request.params.onlineStatus;
 			if(results.length > 0){
-				//已经存在则返回原有记录
+				//已经存在则更新坐标和状态
 				response.success({"code":200, "result":results[0]});
 			}else{
 				var userDynamicData = new UserDynamicData();
@@ -415,7 +423,10 @@ AV.Cloud.define('createUserDynamicData', function(request, response) {
 	}
 });
 
-
+/**
+ * 用户注册
+ * param: {"userId":"xxx","latitude":31.9883,"longitude":323.23}
+ */
 AV.Cloud.define('updateUserDynamicData', function(request, response) {
 	var userId = request.params.userId;
 	if(!userId || userId === ''){
